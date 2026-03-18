@@ -4,7 +4,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, ListTodo, MessageSquare, BarChart3, User as UserIcon, Globe } from 'lucide-react-native';
+import {
+  Home,
+  ListTodo,
+  MessageSquare,
+  BarChart3,
+  User as UserIcon,
+  Globe,
+} from 'lucide-react-native';
 
 import SignInScreen from './components/SignInScreen';
 import UnitOfficerDashboard from 'screens/UnitOfficerDashboard';
@@ -157,14 +164,15 @@ function FieldOfficerTabNavigator({ user, onSignOut }: TabNavigatorProps) {
           tabBarIcon: ({ color, size }) => <ListTodo size={size} color={color} />,
         }}
       />
-      <Tab.Screen
+      {/* TODO - add messages tabs for field officers as well once implemented */}
+      {/* <Tab.Screen
         name="Messages"
         component={MessagesTab}
         options={{
           tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
           tabBarBadge: 2,
         }}
-      />
+      /> */}
       <Tab.Screen
         name="Profile"
         options={{
@@ -202,9 +210,6 @@ export default function App() {
     try {
       const token = await getToken();
       const userData = await getUserData();
-
-      console.log(token);
-      console.log(userData);
 
       if (token) {
         setUser(userData);
