@@ -1,3 +1,8 @@
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+import Splash from './components/SplashScreen';
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator, useColorScheme } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -25,9 +30,13 @@ import { getToken, getUserData, User, removeToken } from './lib/auth';
 import './global.css';
 import ProfileTab from 'screens/ProfileTab';
 import ChangePasswordScreen from 'screens/ChangePasswordScreen';
+import { getUnitOfficerByUserId } from 'lib/convexClient';
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
 // Unit Officer Stacks
 function DashboardStack() {
@@ -196,32 +205,44 @@ function FieldOfficerTabNavigator({ user, onSignOut }: TabNavigatorProps) {
   );
 }
 
-export default function App() {
+function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    checkAuthStatus();
+    const prepare = async () => {
+      try {
+        const token = await getToken();
+        const userData = await getUserData();
+
+        if (token && userData) {
+          setUser(userData);
+          setIsAuthenticated(true);
+
+          setMustChangePassword(true);
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+      } finally {
+        setLoading(false);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      setAppReady(true);
+    };
+
+    prepare();
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      const token = await getToken();
-      const userData = await getUserData();
-
-      if (token) {
-        setUser(userData);
-        setIsAuthenticated(true);
-        setMustChangePassword(true);
-      }
-    } catch (error) {
-      console.error('Error checking auth status:', error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (appReady) {
+      SplashScreen.hideAsync();
     }
-  };
+  }, [appReady]);
 
   const handleSignIn = (userData: User) => {
     setUser(userData);
@@ -240,18 +261,8 @@ export default function App() {
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#F0FDFA',
-        }}>
-        <ActivityIndicator size="large" color="#0EA5A4" />
-      </View>
-    );
+  if (showSplash) {
+    return <Splash onFinish={() => setShowSplash(false)} />;
   }
 
   return (
@@ -276,5 +287,13 @@ export default function App() {
         <SignInScreen onSignIn={handleSignIn} />
       )}
     </SafeAreaProvider>
+  );
+}
+
+export default function AppWrapper() {
+  return (
+    <ConvexProvider client={convex}>
+      <App />
+    </ConvexProvider>
   );
 }
