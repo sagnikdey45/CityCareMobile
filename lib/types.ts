@@ -203,7 +203,7 @@ export interface VerificationChecklist {
   isWithinJurisdiction: boolean;
 }
 
-export type UserRole = 'UnitOfficer' | 'FieldOfficer' | 'Citizen' | 'Admin';
+export type UserRole = 'unit_officer' | 'field_officer' | 'citizen' | 'admin' | 'city_admin';
 
 export type UpdateScope = 'citizen' | 'field_and_citizen' | 'admin_only';
 
@@ -214,7 +214,7 @@ export interface IssueUpdate {
   comment: string;
   role: UserRole;
   attachments: string[];
-  updatedBy: string;
+  updatedBy: string | undefined;
   scope: UpdateScope;
   createdAt: string;
 }
