@@ -202,7 +202,9 @@ export default function ProfileTab({
                 borderColor: roleBadge.border,
               }}>
               <BadgeCheck color={roleBadge.text} size={14} strokeWidth={2.5} />
-              <Text className="text-[11px] font-black uppercase tracking-wider" style={{ color: roleBadge.text }}>
+              <Text
+                className="text-[11px] font-black uppercase tracking-wider"
+                style={{ color: roleBadge.text }}>
                 {role.replace('_', ' ')}
               </Text>
             </View>
@@ -228,7 +230,7 @@ export default function ProfileTab({
               ].map((stat, idx) => (
                 <View
                   key={idx}
-                  className="flex-1 items-center rounded-[24px] border py-4 shadow-sm"
+                  className="flex-1 items-center rounded-[24px] border py-4"
                   style={{
                     backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.2)',
                     borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.3)',
