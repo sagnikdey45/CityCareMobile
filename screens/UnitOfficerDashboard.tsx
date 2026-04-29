@@ -106,7 +106,6 @@ const STATUS_LABEL_MAP: Record<StatusKey | 'all', string> = {
 };
 
 export const CATEGORY_OPTIONS: (string | 'all')[] = [
-  // 'all',
   'road',
   'electricity',
   'water',
@@ -1156,7 +1155,6 @@ export default function UnitOfficerDashboard() {
   const issues = useMemo(() => {
     if (!rawIssues) return [];
 
-    // @ts-ignore
     return rawIssues.map((issue) => mapIssueToUI(issue, {}));
   }, [rawIssues]);
 
@@ -1165,7 +1163,6 @@ export default function UnitOfficerDashboard() {
 
   const filteredIssues = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    // @ts-ignore
     return issues.filter((issue) => {
       if (q) {
         const match =
@@ -1188,7 +1185,6 @@ export default function UnitOfficerDashboard() {
   }, [issues, searchQuery, filters]);
 
   const overdueCount = useMemo(
-    // @ts-ignore
     () => issues.filter((i) => getSlaStatus(i?.slaDeadline) === 'overdue').length,
     []
   );
@@ -1431,7 +1427,6 @@ export default function UnitOfficerDashboard() {
               </Text>
             </View>
           ) : (
-            // @ts-ignore
             filteredIssues.map((issue) => (
               <IssueCard
                 key={issue?.id}

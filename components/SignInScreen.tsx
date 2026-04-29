@@ -27,7 +27,7 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react-native';
 import { User } from '../lib/auth';
 import '../global.css';
@@ -56,7 +56,7 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  
+
   // Background Orbs Animations
   const orb1Anim = useRef(new Animated.Value(0)).current;
   const orb2Anim = useRef(new Animated.Value(0)).current;
@@ -100,7 +100,7 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
             duration: duration,
             useNativeDriver: true,
             easing: Easing.inOut(Easing.sin),
-          })
+          }),
         ])
       ).start();
     };
@@ -157,19 +157,17 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
   };
 
   // Theming & Colors - Breathtaking Green Aesthetic
-  const bgColors = isDark 
-    ? ['#011c12', '#022c22'] 
-    : ['#f0fdf4', '#ecfdf5'];
-    
+  const bgColors = isDark ? ['#011c12', '#022c22'] : ['#f0fdf4', '#ecfdf5'];
+
   const cardBgColor = isDark ? 'rgba(3, 31, 22, 0.85)' : 'rgba(255, 255, 255, 0.95)';
   const cardBorderColor = isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(16, 185, 129, 0.4)';
-  
+
   const inputBgColor = isDark ? 'rgba(6, 78, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
   const inputBgColorFocusedAndroid = isDark ? '#022c22' : '#ffffff';
-  
+
   const inputBorderFocused = isDark ? '#34d399' : '#059669';
   const inputBorderUnfocused = isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(5, 150, 105, 0.15)';
-  
+
   const textColorPrimary = isDark ? '#f0fdf4' : '#064e3b';
   const textColorSecondary = isDark ? '#6ee7b7' : '#047857';
   const iconColor = isDark ? '#6ee7b7' : '#059669';
@@ -181,70 +179,92 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <LinearGradient
-      // @ts-ignore
+        // @ts-ignore
         colors={bgColors as [string, ...string[]]}
         style={StyleSheet.absoluteFillObject}
       />
 
       {/* Decorative Orbs - Emerald tones */}
-      <Animated.View style={[styles.orb, styles.orb1, {
-        opacity: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.5] }),
-        transform: [
-          { translateY: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 80] }) },
-          { scale: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] }) }
-        ],
-        backgroundColor: isDark ? '#10b981' : '#34d399'
-      }]} />
-      
-      <Animated.View style={[styles.orb, styles.orb2, {
-        opacity: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.4] }),
-        transform: [
-          { translateX: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -60] }) },
-          { scale: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] }) }
-        ],
-        backgroundColor: isDark ? '#059669' : '#6ee7b7'
-      }]} />
+      <Animated.View
+        style={[
+          styles.orb,
+          styles.orb1,
+          {
+            opacity: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.5] }),
+            transform: [
+              { translateY: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 80] }) },
+              { scale: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] }) },
+            ],
+            backgroundColor: isDark ? '#10b981' : '#34d399',
+          },
+        ]}
+      />
 
-      <Animated.View style={[styles.orb, styles.orb3, {
-        opacity: orb3Anim.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.35] }),
-        transform: [
-          { translateY: orb3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -100] }) },
-          { translateX: orb3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) }
-        ],
-        backgroundColor: isDark ? '#047857' : '#10b981'
-      }]} />
+      <Animated.View
+        style={[
+          styles.orb,
+          styles.orb2,
+          {
+            opacity: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.4] }),
+            transform: [
+              { translateX: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -60] }) },
+              { scale: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] }) },
+            ],
+            backgroundColor: isDark ? '#059669' : '#6ee7b7',
+          },
+        ]}
+      />
+
+      <Animated.View
+        style={[
+          styles.orb,
+          styles.orb3,
+          {
+            opacity: orb3Anim.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.35] }),
+            transform: [
+              { translateY: orb3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -100] }) },
+              { translateX: orb3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) },
+            ],
+            backgroundColor: isDark ? '#047857' : '#10b981',
+          },
+        ]}
+      />
 
       {/* Main Content */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
+        style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
-            width: '100%',
-            alignItems: 'center',
-          }}>
-            
+          showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+              width: '100%',
+              alignItems: 'center',
+            }}>
             {/* Header Section */}
             <View style={styles.headerContainer}>
               <View style={styles.logoContainer}>
                 <LinearGradient
                   colors={isDark ? ['#065f46', '#022c22'] : ['#a7f3d0', '#ecfdf5']}
-                  style={styles.logoBackground}
-                >
+                  style={styles.logoBackground}>
                   <Image
                     source={require('../assets/logo.png')}
                     style={styles.logo}
                     resizeMode="contain"
                   />
                 </LinearGradient>
-                <View style={[styles.glowRing, { borderColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.25)' }]} />
+                <View
+                  style={[
+                    styles.glowRing,
+                    {
+                      borderColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.25)',
+                    },
+                  ]}
+                />
               </View>
 
               <Text style={[styles.titleText, { color: textColorPrimary }]}>
@@ -256,12 +276,15 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
             </View>
 
             {/* Main Form Card */}
-            <View style={[styles.card, { 
-              backgroundColor: cardBgColor, 
-              borderColor: cardBorderColor,
-              shadowColor: isDark ? '#000' : '#064e3b',
-            }]}>
-              
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: cardBgColor,
+                  borderColor: cardBorderColor,
+                  shadowColor: isDark ? '#000' : '#064e3b',
+                },
+              ]}>
               {/* Error Message */}
               {error ? (
                 <Animated.View style={styles.errorContainer}>
@@ -272,7 +295,9 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
 
               {/* Role Selection Box Cards */}
               <View style={styles.sectionContainer}>
-                <Text style={[styles.sectionLabel, { color: textColorSecondary }]}>Select Role</Text>
+                <Text style={[styles.sectionLabel, { color: textColorSecondary }]}>
+                  Select Role
+                </Text>
                 <View style={styles.roleCardsContainer}>
                   <RoleCard
                     role="Unit Officer"
@@ -307,13 +332,28 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
 
               {/* Email Input */}
               <View style={styles.sectionContainer}>
-                <Text style={[styles.sectionLabel, { color: textColorSecondary }]}>Email Address</Text>
-                <View style={[styles.inputContainer, {
-                  backgroundColor: Platform.OS === 'android' && focusedField === 'email' ? inputBgColorFocusedAndroid : inputBgColor,
-                  borderColor: focusedField === 'email' ? inputBorderFocused : inputBorderUnfocused,
-                  shadowColor: focusedField === 'email' ? inputBorderFocused : 'transparent',
-                }]}>
-                  <Mail color={focusedField === 'email' ? inputBorderFocused : iconColor} size={20} strokeWidth={2} style={styles.inputIcon} />
+                <Text style={[styles.sectionLabel, { color: textColorSecondary }]}>
+                  Email Address
+                </Text>
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      backgroundColor:
+                        Platform.OS === 'android' && focusedField === 'email'
+                          ? inputBgColorFocusedAndroid
+                          : inputBgColor,
+                      borderColor:
+                        focusedField === 'email' ? inputBorderFocused : inputBorderUnfocused,
+                      shadowColor: focusedField === 'email' ? inputBorderFocused : 'transparent',
+                    },
+                  ]}>
+                  <Mail
+                    color={focusedField === 'email' ? inputBorderFocused : iconColor}
+                    size={20}
+                    strokeWidth={2}
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={[styles.input, { color: textColorPrimary }]}
                     placeholder="officer@citycare.com"
@@ -333,12 +373,25 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
               {/* Password Input */}
               <View style={styles.sectionContainer}>
                 <Text style={[styles.sectionLabel, { color: textColorSecondary }]}>Password</Text>
-                <View style={[styles.inputContainer, {
-                  backgroundColor: Platform.OS === 'android' && focusedField === 'password' ? inputBgColorFocusedAndroid : inputBgColor,
-                  borderColor: focusedField === 'password' ? inputBorderFocused : inputBorderUnfocused,
-                  shadowColor: focusedField === 'password' ? inputBorderFocused : 'transparent',
-                }]}>
-                  <Lock color={focusedField === 'password' ? inputBorderFocused : iconColor} size={20} strokeWidth={2} style={styles.inputIcon} />
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      backgroundColor:
+                        Platform.OS === 'android' && focusedField === 'password'
+                          ? inputBgColorFocusedAndroid
+                          : inputBgColor,
+                      borderColor:
+                        focusedField === 'password' ? inputBorderFocused : inputBorderUnfocused,
+                      shadowColor: focusedField === 'password' ? inputBorderFocused : 'transparent',
+                    },
+                  ]}>
+                  <Lock
+                    color={focusedField === 'password' ? inputBorderFocused : iconColor}
+                    size={20}
+                    strokeWidth={2}
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={[styles.input, { color: textColorPrimary, flex: 1 }]}
                     placeholder="Enter your password"
@@ -355,8 +408,7 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
                     style={styles.eyeButton}
-                    activeOpacity={0.7}
-                  >
+                    activeOpacity={0.7}>
                     {showPassword ? (
                       <Eye color={iconColor} size={20} strokeWidth={2} />
                     ) : (
@@ -371,16 +423,20 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
                 disabled={loading}
                 activeOpacity={0.85}
                 onPress={handleSignIn}
-                style={styles.signInButtonContainer}
-              >
+                style={styles.signInButtonContainer}>
                 <LinearGradient
-                  colors={loading 
-                    ? (isDark ? ['#064e3b', '#022c22'] : ['#a7f3d0', '#6ee7b7']) 
-                    : (isDark ? ['#059669', '#10b981'] : ['#10b981', '#059669'])}
+                  colors={
+                    loading
+                      ? isDark
+                        ? ['#064e3b', '#022c22']
+                        : ['#a7f3d0', '#6ee7b7']
+                      : isDark
+                        ? ['#059669', '#10b981']
+                        : ['#10b981', '#059669']
+                  }
                   style={styles.signInGradient}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
+                  end={{ x: 1, y: 0 }}>
                   {loading ? (
                     <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
@@ -392,7 +448,6 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -431,13 +486,23 @@ function RoleCard({ role, selectedRole, onSelect, isDark, icon, description }: R
             styles.roleBox,
             {
               borderColor: isSelected
-                ? isDark ? '#34d399' : '#059669'
-                : isDark ? 'rgba(52,211,153,0.15)' : 'rgba(5,150,105,0.15)',
+                ? isDark
+                  ? '#34d399'
+                  : '#059669'
+                : isDark
+                  ? 'rgba(52,211,153,0.15)'
+                  : 'rgba(5,150,105,0.15)',
               backgroundColor: isSelected
                 ? Platform.OS === 'android'
-                  ? (isDark ? '#064e3b' : '#ecfdf5')
-                  : (isDark ? 'rgba(6,78,59,0.85)' : 'rgba(236,253,245,1)')
-                : isDark ? 'rgba(4,47,36,0.6)' : 'rgba(255,255,255,0.7)',
+                  ? isDark
+                    ? '#064e3b'
+                    : '#ecfdf5'
+                  : isDark
+                    ? 'rgba(6,78,59,0.85)'
+                    : 'rgba(236,253,245,1)'
+                : isDark
+                  ? 'rgba(4,47,36,0.6)'
+                  : 'rgba(255,255,255,0.7)',
               shadowColor: isSelected ? (isDark ? '#10b981' : '#059669') : 'transparent',
               shadowOpacity: isSelected ? 0.35 : 0,
               shadowRadius: 16,
@@ -449,8 +514,12 @@ function RoleCard({ role, selectedRole, onSelect, isDark, icon, description }: R
               styles.roleIconCircle,
               {
                 backgroundColor: isSelected
-                  ? isDark ? '#059669' : '#10b981'
-                  : isDark ? 'rgba(52,211,153,0.1)' : 'rgba(5,150,105,0.08)',
+                  ? isDark
+                    ? '#059669'
+                    : '#10b981'
+                  : isDark
+                    ? 'rgba(52,211,153,0.1)'
+                    : 'rgba(5,150,105,0.08)',
               },
             ]}>
             {icon}
@@ -461,8 +530,12 @@ function RoleCard({ role, selectedRole, onSelect, isDark, icon, description }: R
               styles.roleBoxLabel,
               {
                 color: isSelected
-                  ? isDark ? '#6ee7b7' : '#064e3b'
-                  : isDark ? '#a7f3d0' : '#047857',
+                  ? isDark
+                    ? '#6ee7b7'
+                    : '#064e3b'
+                  : isDark
+                    ? '#a7f3d0'
+                    : '#047857',
               },
             ]}>
             {role}
@@ -472,8 +545,12 @@ function RoleCard({ role, selectedRole, onSelect, isDark, icon, description }: R
               styles.roleBoxDesc,
               {
                 color: isSelected
-                  ? isDark ? 'rgba(110,231,183,0.9)' : 'rgba(6,78,59,0.7)'
-                  : isDark ? 'rgba(167,243,208,0.6)' : 'rgba(4,120,87,0.6)',
+                  ? isDark
+                    ? 'rgba(110,231,183,0.9)'
+                    : 'rgba(6,78,59,0.7)'
+                  : isDark
+                    ? 'rgba(167,243,208,0.6)'
+                    : 'rgba(4,120,87,0.6)',
               },
             ]}>
             {description}
@@ -701,4 +778,3 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
-
