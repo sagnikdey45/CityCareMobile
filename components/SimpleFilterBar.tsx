@@ -35,7 +35,7 @@ const FILTER_META: Record<
     label: 'All Tasks',
     dot: '#3B82F6',
     activeBg: 'bg-blue-50 border-blue-200/60',
-    activeDark: 'dark:bg-blue-900/40 dark:border-blue-800/60',
+    activeDark: 'dark:bg-blue-900 dark:border-blue-800/60',
     activeText: 'text-blue-700',
     activeDarkText: 'dark:text-blue-300',
     shadowColor: '#3B82F6',
@@ -45,7 +45,7 @@ const FILTER_META: Record<
     label: 'Assigned',
     dot: '#0D9488',
     activeBg: 'bg-teal-50 border-teal-200/60',
-    activeDark: 'dark:bg-teal-900/40 dark:border-teal-800/60',
+    activeDark: 'dark:bg-teal-900 dark:border-teal-800/60',
     activeText: 'text-teal-700',
     activeDarkText: 'dark:text-teal-300',
     shadowColor: '#0D9488',
@@ -55,7 +55,7 @@ const FILTER_META: Record<
     label: 'In Progress',
     dot: '#F59E0B',
     activeBg: 'bg-amber-50 border-amber-200/60',
-    activeDark: 'dark:bg-amber-900/40 dark:border-amber-800/60',
+    activeDark: 'dark:bg-amber-900 dark:border-amber-800/60',
     activeText: 'text-amber-700',
     activeDarkText: 'dark:text-amber-300',
     shadowColor: '#F59E0B',
@@ -65,7 +65,7 @@ const FILTER_META: Record<
     label: 'Verification',
     dot: '#6366F1',
     activeBg: 'bg-indigo-50 border-indigo-200/60',
-    activeDark: 'dark:bg-indigo-900/40 dark:border-indigo-800/60',
+    activeDark: 'dark:bg-indigo-900 dark:border-indigo-800/60',
     activeText: 'text-indigo-700',
     activeDarkText: 'dark:text-indigo-300',
     shadowColor: '#6366F1',
@@ -75,7 +75,7 @@ const FILTER_META: Record<
     label: 'Rework',
     dot: '#DC2626',
     activeBg: 'bg-red-50 border-red-200/60',
-    activeDark: 'dark:bg-red-900/40 dark:border-red-800/60',
+    activeDark: 'dark:bg-red-900 dark:border-red-800/60',
     activeText: 'text-red-700',
     activeDarkText: 'dark:text-red-300',
     shadowColor: '#DC2626',
@@ -105,7 +105,7 @@ export default function SimpleFilterBar({
   };
 
   return (
-    <View className="z-50 border-b border-slate-100 bg-white/95 px-4 py-4 dark:border-slate-800/50 dark:bg-[#0B1120]">
+    <View className="z-50 border-b border-slate-100 bg-white px-4 py-4 dark:border-slate-800 dark:bg-[#0B1120]">
       <View className="mb-2.5 px-1">
         <Text className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
           Filter Tasks By Status
