@@ -57,7 +57,7 @@ export default function FieldDashboardScreen() {
   const fieldOfficerIssues = useMemo(() => {
     if (!rawIssues) return [];
 
-    return rawIssues.map((issue) => mapIssueToUI(issue, {}));
+    return rawIssues.map((issue) => mapIssueToUI(issue));
   }, [rawIssues]);
 
   // console.log('rawIssues FO Issues: \n', JSON.stringify(rawIssues, null, 2));
