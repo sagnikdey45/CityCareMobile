@@ -724,6 +724,9 @@ export default function SLAOverduePanel({
               reporterId: issue.reportedBy,
             });
             // onReject(rejectReason, rejectNote.trim(), updated);
+            setRejectNote('');
+            setRejectReason(null);
+            setActiveTab('reassign');
           },
         },
       ]
@@ -744,25 +747,8 @@ export default function SLAOverduePanel({
         {
           text: 'Extend',
           onPress: () => {
-            const citizenUpdate: IssueUpdate = {
-              id: `upd-${Date.now()}`,
-              issueId: issue.id,
-              status: issue.status,
-              comment: `SLA deadline extended to ${formatDateDisplay(extendNewSla)}. Reason: ${extendReason}. Note: ${extendNote.trim()}`,
-              role: 'UnitOfficer',
-              attachments: [],
-              updatedBy: 'uo-1',
-              scope: 'officer_and_citizen',
-              createdAt: new Date().toISOString(),
-            };
-            const updated: Issue = {
-              ...issue,
-              slaDeadline: extendNewSla.toISOString(),
-              slaExtensionReason: extendReason,
-              slaExtensionComment: extendNote.trim(),
-              issueUpdates: [...issue.issueUpdates, citizenUpdate],
-            };
-            onExtend(extendReason, extendNote.trim(), extendNewSla, updated);
+            console.log(extendReason, extendNote.trim(), extendNewSla);
+            // onExtend(extendReason, extendNote.trim(), extendNewSla, updated);
           },
         },
       ]
@@ -785,25 +771,8 @@ export default function SLAOverduePanel({
           text: 'Escalate',
           style: 'destructive',
           onPress: () => {
-            const citizenUpdate: IssueUpdate = {
-              id: `upd-${Date.now()}`,
-              issueId: issue.id,
-              status: 'Escalated',
-              comment: `Issue escalated to Admin due to SLA breach. Unit Officer note: ${escalateNote.trim()}`,
-              role: 'UnitOfficer',
-              attachments: [],
-              updatedBy: 'uo-1',
-              scope: 'officer_and_citizen',
-              createdAt: new Date().toISOString(),
-            };
-            const updated: Issue = {
-              ...issue,
-              status: 'Escalated',
-              escalationReason: 'SLA breach',
-              slaAdminEscalationComment: escalateNote.trim(),
-              issueUpdates: [...issue.issueUpdates, citizenUpdate],
-            };
-            onEscalate(escalateNote.trim(), updated);
+            console.log(escalateNote.trim());
+            // onEscalate(escalateNote.trim());
           },
         },
       ]
