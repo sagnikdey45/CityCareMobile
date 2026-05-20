@@ -323,17 +323,39 @@ export const rejectIssue = mutation({
     const now = Date.now();
 
     // Update issue status to "rejected" and add rejection details
-    await ctx.db.patch(args.issueId, {
-      status: 'rejected',
-      rejection: {
-        reason: args.reason,
-        comment: args.comment ?? undefined,
-        rejectedBy: args.rejectedBy,
-        rejectedAt: now,
-      },
-      // Clear any existing assignments
-      assignedFieldOfficer: null,
-    });
+    if (args.isSlaRejection) {
+      await ctx.db.patch(args.issueId, {
+        status: 'rejected',
+        rejection: {
+          reason: args.reason,
+          comment: args.comment ?? null,
+          rejectedBy: args.rejectedBy,
+          rejectedAt: now,
+        },
+        slaRejection: {
+          reason: args.reason,
+          comment: args.comment ?? null,
+          rejectedBy: args.rejectedBy,
+          rejectedAt: now,
+        },
+        slaDeadline: null,
+        slaBreachedCount: (issue.slaBreachedCount || 0) + 1,
+        // Clear any existing assignments
+        assignedFieldOfficer: null,
+      });
+    } else {
+      await ctx.db.patch(args.issueId, {
+        status: 'rejected',
+        rejection: {
+          reason: args.reason,
+          comment: args.comment ?? null,
+          rejectedBy: args.rejectedBy,
+          rejectedAt: now,
+        },
+        // Clear any existing assignments
+        assignedFieldOfficer: null,
+      });
+    }
 
     if (args.status === 'reopened') {
       // Add the Issue Timeline Update for reopened issue
@@ -480,6 +502,8 @@ export const assignIssueToFieldOfficer = mutation({
     previousFieldOfficerName: v.optional(v.string()),
     reassignmentReason: v.optional(v.string()),
     reassignmentComment: v.optional(v.string()),
+    newSLADeadline: v.optional(v.number()),
+    isSlaReassign: v.optional(v.boolean()),
   },
 
   handler: async (ctx, args) => {
@@ -498,6 +522,8 @@ export const assignIssueToFieldOfficer = mutation({
 
     const now = Date.now();
 
+    let previousFOId = '';
+
     // Handle reassignmet
     if (args.isReassign && issue.assignedFieldOfficer) {
       const prevFO = await ctx.db
@@ -506,6 +532,9 @@ export const assignIssueToFieldOfficer = mutation({
         .unique();
 
       if (prevFO) {
+        // Stores the Previous Field Officer's _id for further use
+        previousFOId = prevFO.userId;
+
         // Notification to Previous Field Officer
         await ctx.db.insert('notifications', {
           userId: prevFO.userId,
@@ -513,7 +542,8 @@ export const assignIssueToFieldOfficer = mutation({
           title: `Issue Reassigned - "${args.issueTitle} (${args.issueCode})"`,
           message: `Issue "${args.issueTitle}" with Issue Code "${args.issueCode}" has been reassigned from you by Unit Officer ${unitOfficer.fullName} to Field Officer ${fieldOfficer.fullName}.${
             args.reassignmentReason ? `\nReason: ${args.reassignmentReason}.` : ''
-          }${args.reassignmentComment ? `\nComment: ${args.reassignmentComment}` : ''}`,
+          }${args.reassignmentComment ? `\nComment: ${args.reassignmentComment}` : ''}
+          ${args.isSlaReassign ? `\nThe issue was reassigned due to SLA non-adherence.` : ''}`,
           type: 'assigned',
           read: false,
           createdAt: now,
@@ -530,12 +560,29 @@ export const assignIssueToFieldOfficer = mutation({
     }
 
     // Updates the assigned status of the issue
-    await ctx.db.patch(args.issueId, {
-      status: 'assigned',
-
-      // store FO userId
-      assignedFieldOfficer: fieldOfficer.userId,
-    });
+    if (args.isSlaReassign) {
+      await ctx.db.patch(args.issueId, {
+        status: 'assigned',
+        // store current FO userId
+        assignedFieldOfficer: fieldOfficer.userId,
+        slaDeadline: args.newSLADeadline,
+        slaReassignment: {
+          reason: args.reassignmentReason as string,
+          comment: args.reassignmentComment as string,
+          previousFieldOfficer: previousFOId as Id<'users'>,
+          newFieldOfficer: fieldOfficer.userId,
+          reassignedBy: unitOfficer.userId,
+          reassignedAt: now,
+          newSlaDeadline: args.newSLADeadline as number,
+        },
+      });
+    } else {
+      await ctx.db.patch(args.issueId, {
+        status: 'assigned',
+        // store current FO userId
+        assignedFieldOfficer: fieldOfficer.userId,
+      });
+    }
 
     // Store the assigned issues id in the field officer
     let updatedAssignedIssues = fieldOfficer.assignedIssueIds;
@@ -557,7 +604,11 @@ export const assignIssueToFieldOfficer = mutation({
           args.previousFieldOfficerName ?? 'previous field officer'
         } to ${fieldOfficer.fullName}.${
           args.reassignmentReason ? `\nReason: ${args.reassignmentReason}.` : ''
-        }${args.reassignmentComment ? `\nComment: ${args.reassignmentComment}` : ''}`
+        }${args.reassignmentComment ? `\nComment: ${args.reassignmentComment}` : ''}${
+          args.isSlaReassign
+            ? `\nThe issue was reassigned due to SLA non-adherence.\nWe are very sorry for the inconvenience caused due to the delay in handling the issue.`
+            : ''
+        }`
       : `Issue assigned to Field Officer ${fieldOfficer.fullName}.`;
 
     // Add the Issue Timeline Update for assigned issue
@@ -577,7 +628,7 @@ export const assignIssueToFieldOfficer = mutation({
       userId: fieldOfficer.userId,
       issueId: args.issueId,
       title: `Issue Assigned to You - "${args.issueTitle} (${args.issueCode})"`,
-      message: `You have been assigned issue "${args.issueTitle}" with Issue Code "${args.issueCode}" by Unit Officer ${unitOfficer.fullName}.`,
+      message: `You have been assigned issue "${args.issueTitle}" with Issue Code "${args.issueCode}" by Unit Officer ${unitOfficer.fullName}.${args.isSlaReassign ? `\nThe issue was reassigned due to SLA non-adherence.\nThe new SLA Deadline is ${new Date(args.newSLADeadline as number).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}`,
       type: 'assigned',
       read: false,
       createdAt: now,
@@ -588,7 +639,7 @@ export const assignIssueToFieldOfficer = mutation({
       userId: args.assignedBy,
       issueId: args.issueId,
       title: `Issue Assigned to FO ${fieldOfficer.fullName} - "${args.issueTitle} (${args.issueCode})"`,
-      message: `You assigned issue "${args.issueTitle}" with Issue Code "${args.issueCode}" to ${fieldOfficer.fullName}.`,
+      message: `You assigned issue "${args.issueTitle}" with Issue Code "${args.issueCode}" to ${fieldOfficer.fullName}.${args.isSlaReassign ? `\nThe issue was reassigned due to SLA non-adherence.\nThe new SLA Deadline is ${new Date(args.newSLADeadline as number).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}`,
       type: 'assigned',
       read: false,
       createdAt: now,
@@ -599,7 +650,7 @@ export const assignIssueToFieldOfficer = mutation({
       userId: issue.reportedBy,
       issueId: args.issueId,
       title: `Issue Assigned to Field Officer - "${args.issueTitle} (${args.issueCode})"`,
-      message: `Your issue "${args.issueTitle}" with Issue Code "${args.issueCode}" has been assigned to a Field Officer ${fieldOfficer.fullName} for further actions.`,
+      message: `Your issue "${args.issueTitle}" with Issue Code "${args.issueCode}" has been assigned to a Field Officer ${fieldOfficer.fullName} for further actions.${args.isSlaReassign ? `\nThe issue was reassigned due to SLA non-adherence.\nWe are very sorry for the inconvenience caused due to the delay in handling the issue.` : ''}`,
       type: 'assigned',
       read: false,
       createdAt: now,
@@ -768,7 +819,7 @@ export const requestRework = mutation({
   },
 });
 
-export const extendSLAOverdue = mutation({
+export const extendSLADeadline = mutation({
   args: {
     issueId: v.id('issues'),
     issueCode: v.string(),
@@ -805,6 +856,7 @@ export const extendSLAOverdue = mutation({
     // Update Issue SLA Deadline
     await ctx.db.patch(args.issueId, {
       slaDeadline: args.newSlaDeadline,
+      slaBreached: false,
       slaExtension: {
         reason: args.reason,
         comment: args.comment,
@@ -821,9 +873,12 @@ export const extendSLAOverdue = mutation({
       status: issue.status,
       comment: `SLA deadline extended by Unit Officer ${args.extendedByName}.\nReason: ${
         args.reason
-      }\nNote: ${args.comment}\nNew SLA Deadline: ${new Date(
-        args.newSlaDeadline
-      ).toLocaleString()}\nWe sincerely apologize for any inconvenience caused due to delay in the resolution of this issue.`,
+      }\nNote: ${args.comment}\nNew SLA Deadline: ${new Date(args.newSlaDeadline).toLocaleString(
+        'en-IN',
+        {
+          timeZone: 'Asia/Kolkata',
+        }
+      )}\nWe sincerely apologize for any inconvenience caused due to delay in the resolution of this issue.`,
       updatedBy: args.extendedBy,
       role: 'unit_officer',
       attachments: [],
@@ -834,7 +889,7 @@ export const extendSLAOverdue = mutation({
     // Notification to the assigned Field Officer
     if (args.assignedFieldOfficerUserId) {
       await ctx.db.insert('notifications', {
-        userId: String(args.assignedFieldOfficerUserId),
+        userId: args.assignedFieldOfficerUserId,
         issueId: args.issueId,
         title: 'SLA deadline extended',
         message: `The SLA deadline for issue "${args.issueName}" with Issue Code "${args.issueCode}" has been extended.`,
@@ -846,10 +901,10 @@ export const extendSLAOverdue = mutation({
 
     // Notification to the Citizen
     await ctx.db.insert('notifications', {
-      userId: String(args.reporterId),
+      userId: args.reporterId,
       issueId: args.issueId,
       title: 'SLA deadline updated',
-      message: `The resolution timeline for your issue "${args.issueName}" with Issue Code "${args.issueCode}" has been extended.We sincerely apologize for any inconvenience caused due to delay in the resolution of this issue.`,
+      message: `The resolution timeline for your issue "${args.issueName}" with Issue Code "${args.issueCode}" has been extended. We sincerely apologize for any inconvenience caused due to delay in the resolution of this issue.`,
       type: 'sla_alert',
       read: false,
       createdAt: now,
@@ -857,7 +912,7 @@ export const extendSLAOverdue = mutation({
 
     // Notification to the Unit Officer who extended the SLA deadline
     await ctx.db.insert('notifications', {
-      userId: String(args.extendedBy),
+      userId: args.extendedBy,
       issueId: args.issueId,
       title: 'SLA extension completed',
       message: `You extended the SLA deadline for issue "${args.issueName}".`,

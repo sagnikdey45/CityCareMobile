@@ -8,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   Modal,
+  InteractionManager,
 } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -39,6 +40,9 @@ import {
   MappedIssue,
 } from '../lib/types';
 import { useUser } from 'context/UserContext';
+import { useMutation } from 'convex/react';
+import { api } from 'convex/_generated/api';
+import { Id } from 'convex/_generated/dataModel';
 
 const SLA_REJECTION_REASONS: SLAOverdueRejectionReason[] = [
   'Non-feasible due to structural constraints',
@@ -74,20 +78,46 @@ interface SLAOverduePanelProps {
   issue: MappedIssue;
   fieldOfficers: FieldOfficer[];
   onReassign: (
-    newOfficer: FieldOfficer,
-    reason: ReassignmentReason,
-    note: string,
-    newSlaDate: Date,
-    updatedIssue: Issue
+    issueId: Id<'issues'>,
+    fieldOfficerId: Id<'fieldOfficers'>,
+    assignedBy: Id<'users'>,
+    issueTitle: string,
+    issueCode: string,
+    isReassign: boolean,
+    previousFieldOfficerName: string,
+    reassignmentReason: string,
+    reassignmentComment: string,
+    newSLADeadline: number
   ) => void;
-  onReject: (reason: SLAOverdueRejectionReason, note: string, updatedIssue: Issue) => void;
+  onReject: (
+    issueId: Id<'issues'>,
+    issueCode: string,
+    reason: string,
+    comment: string,
+    UOName: string,
+    status: string,
+    rejectedBy: Id<'users'>,
+    issueName: string,
+    reporterId: Id<'users'>
+  ) => void;
   onExtend: (
-    reason: SLAExtensionReason,
-    note: string,
-    newSlaDate: Date,
-    updatedIssue: Issue
+    issueId: string,
+    issueCode: string,
+    issueName: string,
+
+    extendedBy: Id<'users'>,
+    extendedByName: string,
+
+    reporterId: Id<'users'>,
+
+    assignedFieldOfficerUserId: Id<'users'>,
+
+    assignedFieldOfficerName: string,
+
+    reason: string,
+    comment: string,
+    newSlaDeadline: number
   ) => void;
-  onEscalate: (note: string, updatedIssue: Issue) => void;
 }
 
 function daysSinceOverdue(slaDeadline: string): number {
@@ -631,7 +661,6 @@ export default function SLAOverduePanel({
   onReassign,
   onReject,
   onExtend,
-  onEscalate,
 }: SLAOverduePanelProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -673,26 +702,18 @@ export default function SLAOverduePanel({
           text: 'Confirm',
           style: 'destructive',
           onPress: () => {
-            console.log('updated', {
-              newOfficer: reassignOfficer,
-              newSlaDate: reassignNewSla,
-              reassignReason,
-              reassignNote,
-              updatedIssue: {
-                status: 'assigned',
-                assignedFieldOfficer: reassignOfficer._id,
-                slaDeadline: reassignNewSla.toISOString(),
-                reassignmentReason: reassignReason,
-                reassignmentComment: reassignNote.trim(),
-              },
-            });
-            // onReassign(
-            //   reassignOfficer,
-            //   reassignReason,
-            //   reassignNote.trim(),
-            //   reassignNewSla,
-            //   updated
-            // );
+            onReassign(
+              issue?.id as Id<'issues'>,
+              reassignOfficer._id as Id<'fieldOfficers'>,
+              user?.id as Id<'users'>,
+              issue?.title as string,
+              issue?.issueCode as string,
+              true as boolean,
+              issue?.assignedOfficer?.fullName as string,
+              reassignReason as ReassignmentReason,
+              reassignNote.trim() as string,
+              reassignNewSla.getTime() as number
+            );
           },
         },
       ]
@@ -713,21 +734,32 @@ export default function SLAOverduePanel({
           text: 'Reject Issue',
           style: 'destructive',
           onPress: () => {
-            console.log({
-              issueId: issue.id,
-              issueCode: issue.issueCode,
-              reason: rejectReason,
-              comment: rejectNote.trim(),
-              UOName: user?.name,
-              status: 'rejected',
-              rejectedBy: user?.id,
-              issueName: issue.title,
-              reporterId: issue.reportedBy,
-            });
+            // console.log({
+            //   issueId: issue.id,
+            //   issueCode: issue.issueCode,
+            //   reason: rejectReason,
+            //   comment: rejectNote.trim(),
+            //   UOName: user?.name,
+            //   status: issue?.status,
+            //   rejectedBy: user?.id,
+            //   issueName: issue.title,
+            //   reporterId: issue.reportedBy,
+            // });
+            onReject(
+              issue.id as Id<'issues'>,
+              issue.issueCode,
+              rejectReason,
+              rejectNote.trim(),
+              user?.name ?? 'Unit Officer',
+              issue?.status,
+              user?.id as Id<'users'>,
+              issue?.title,
+              issue.reportedBy as Id<'users'>
+            );
             // onReject(rejectReason, rejectNote.trim(), updated);
-            setRejectNote('');
-            setRejectReason(null);
-            setActiveTab('reassign');
+            // setRejectNote('');
+            // setRejectReason(null);
+            // setActiveTab('reassign');
           },
         },
       ]
@@ -740,37 +772,28 @@ export default function SLAOverduePanel({
       return Alert.alert('Required', 'Please add a note explaining the extension.');
     if (!extendNewSla) return Alert.alert('Required', 'Please select a new SLA deadline date.');
 
-    Alert.alert(
-      'Confirm SLA Extension',
-      `Extend SLA deadline to ${formatDateDisplay(extendNewSla)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Extend',
-          onPress: () => {
-            console.log(extendReason, extendNote.trim(), extendNewSla);
-            console.log({
-              issueId: issue.id,
-              issueCode: issue.issueCode,
-              issueName: issue.title,
+    onExtend(
+      issue.id as Id<'issues'>,
+      issue.issueCode,
+      issue.title,
 
-              extendedBy: user?.id,
-              extendedByName: user?.name,
+      user?.id as Id<'users'>,
+      user?.name ?? 'Unit Officer',
 
-              reporterId: issue.reportedBy,
+      issue.reportedBy as Id<'users'>,
 
-              assignedFieldOfficerUserId: issue.assignedOfficer?.userId,
-              assignedFieldOfficerName: issue.assignedOfficer?.fullName,
+      issue.assignedOfficer?.userId as Id<'users'>,
 
-              reason: extendReason,
-              comment: extendNote.trim(),
-              newSlaDeadline: extendNewSla.getTime(),
-            });
-            // onExtend(extendReason, extendNote.trim(), extendNewSla, updated);
-          },
-        },
-      ]
+      issue.assignedOfficer?.fullName as string,
+
+      extendReason,
+      extendNote.trim(),
+      extendNewSla.getTime()
     );
+    setExtendReason(null);
+    setExtendNote('');
+    setExtendNewSla(null);
+    setActiveTab('reassign');
   };
 
   const handleEscalate = () => {
@@ -837,6 +860,13 @@ export default function SLAOverduePanel({
     },
   ];
 
+  const filteredTabs = TABS.filter((tab) => {
+    if (tab.key === 'reassign') {
+      return !!issue?.assignedOfficer;
+    }
+    return true;
+  });
+
   return (
     <View>
       {/* Cohesive SLA Alert Banner */}
@@ -877,7 +907,7 @@ export default function SLAOverduePanel({
 
       {/* Classic Clean Tab Bar */}
       <View className="flex-row border-b border-slate-100 bg-white px-2 dark:border-slate-800 dark:bg-slate-900">
-        {TABS.map((tab) => {
+        {filteredTabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
             <TouchableOpacity
