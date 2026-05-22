@@ -84,20 +84,20 @@ import {
   IssueUpdate,
   MappedIssue,
   UpdateScope,
-} from '../lib/types';
-import RejectionModal from '../components/RejectionModal';
-import ReassignmentModal from '../components/ReassignmentModal';
+} from 'lib/types';
+import RejectionModal from 'components/UnitOfficer/RejectionModal';
+import ReassignmentModal from 'components/UnitOfficer/ReassignmentModal';
 import {
   VerificationChecklist,
   RejectionReason,
   SLAOverdueRejectionReason,
   SLAExtensionReason,
   FieldOfficer,
-} from '../lib/types';
-import AssignOfficerModal from 'components/AssignOfficerModal';
-import VerificationFlow from 'components/VerificationFlow';
-import UOVerificationPanel from 'components/UOVerificationPanel';
-import SLAOverduePanel from 'components/SLAOverduePanel';
+} from 'lib/types';
+import AssignOfficerModal from 'components/UnitOfficer/AssignOfficerModal';
+import VerificationFlow from 'components/UnitOfficer/VerificationFlow';
+import UOVerificationPanel from 'components/UnitOfficer/UOVerificationPanel';
+import SLAOverduePanel from 'components/UnitOfficer/SLAOverduePanel';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { mapIssueToUI } from 'lib/issueMapper';

@@ -10,11 +10,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { FileText } from 'lucide-react-native';
-import FieldOfficerDashboard from '../screens/FieldOfficerDashboard';
-import FieldIssueCard from './FieldIssueCard';
-import SimpleFilterBar from './SimpleFilterBar';
-import NotificationPanel from './NotificationPanel';
-import { Issue } from '../lib/types';
+import FieldOfficerDashboard from './FieldOfficerDashboard';
+import FieldIssueCard from 'components/FieldOfficer/FieldIssueCard';
+import SimpleFilterBar from 'components/FieldOfficer/SimpleFilterBar';
+import NotificationPanel from 'components/NotificationPanel';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useUser } from 'context/UserContext';
@@ -130,7 +129,7 @@ export default function FieldDashboardScreen() {
         }>
         <FieldOfficerDashboard
           officerName={user?.name || 'Field Officer'}
-          ward={"Ward 12 – South Zone"}
+          ward={'Ward 12 – South Zone'}
           stats={mockStats}
           onNotificationPress={() => setShowNotifications(true)}
         />

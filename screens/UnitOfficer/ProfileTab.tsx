@@ -33,7 +33,7 @@ import {
   Map,
 } from 'lucide-react-native';
 
-import { User } from '../lib/auth';
+import { User } from 'lib/auth';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
 

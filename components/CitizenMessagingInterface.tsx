@@ -32,7 +32,7 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react-native';
-import { CitizenMessage, Issue } from '../lib/types';
+import { CitizenMessage, Issue } from 'lib/types';
 import { useUser } from 'context/UserContext';
 import { useMutation, useQuery } from 'convex/react';
 import { Id } from 'convex/_generated/dataModel';
@@ -155,7 +155,7 @@ export default function CitizenMessagingInterface({
 
   const user = useUser();
   const currentUserId = user?.id as Id<'users'> | undefined;
-  
+
   const chatPartnerId = issue.reportedBy as Id<'users'> | undefined;
 
   const rawMessages = useQuery(
@@ -185,7 +185,7 @@ export default function CitizenMessagingInterface({
       read: msg.isRead,
     }));
   }, [rawMessages]);
-  
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -223,7 +223,9 @@ export default function CitizenMessagingInterface({
   }, [visible, currentUserId, chatPartnerId, issue.id, messages]);
 
   const citizenName =
-    messages.find((m) => m.fromRole === 'citizen' || m.fromRole === 'Citizen')?.fromName ?? issue.citizenName ?? 'Citizen';
+    messages.find((m) => m.fromRole === 'citizen' || m.fromRole === 'Citizen')?.fromName ??
+    issue.citizenName ??
+    'Citizen';
   const citizenAvatar = null;
 
   const handleSend = async () => {
@@ -286,91 +288,93 @@ export default function CitizenMessagingInterface({
               {/* ── Breathtaking Header ── */}
               <View>
                 <LinearGradient
-                colors={
-                  isDark
-                    ? ['#115E59', '#0D9488', 'transparent']
-                    : ['#0D9488', '#0F766E', 'transparent']
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 }}>
-                {/* Modal Drag Handle */}
-                <View {...panResponder.panHandlers} className="mb-2 items-center w-full py-4 -mt-4">
-                  <View className="h-1.5 w-12 rounded-full bg-white/40" />
-                </View>
+                  colors={
+                    isDark
+                      ? ['#115E59', '#0D9488', 'transparent']
+                      : ['#0D9488', '#0F766E', 'transparent']
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 }}>
+                  {/* Modal Drag Handle */}
+                  <View
+                    {...panResponder.panHandlers}
+                    className="-mt-4 mb-2 w-full items-center py-4">
+                    <View className="h-1.5 w-12 rounded-full bg-white/40" />
+                  </View>
 
-                <View className="w-full flex-row items-center justify-between">
-                  <View className="flex-1 flex-row items-center gap-3.5 pr-2">
-                    <TouchableOpacity
-                      onPress={onClose}
-                      activeOpacity={0.7}
-                      className="h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-sm">
-                      <X size={20} color="#FFFFFF" strokeWidth={2.5} />
-                    </TouchableOpacity>
+                  <View className="w-full flex-row items-center justify-between">
+                    <View className="flex-1 flex-row items-center gap-3.5 pr-2">
+                      <TouchableOpacity
+                        onPress={onClose}
+                        activeOpacity={0.7}
+                        className="h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-sm">
+                        <X size={20} color="#FFFFFF" strokeWidth={2.5} />
+                      </TouchableOpacity>
 
-                    <View className="relative">
-                      {citizenAvatar ? (
-                        <Image source={{ uri: citizenAvatar }} style={styles.headerAvatar} />
-                      ) : (
-                        <View
-                          style={styles.headerAvatar}
-                          className="items-center justify-center border border-white/30 bg-white/25 shadow-sm">
-                          <User size={22} color="#FFFFFF" strokeWidth={2.5} />
+                      <View className="relative">
+                        {citizenAvatar ? (
+                          <Image source={{ uri: citizenAvatar }} style={styles.headerAvatar} />
+                        ) : (
+                          <View
+                            style={styles.headerAvatar}
+                            className="items-center justify-center border border-white/30 bg-white/25 shadow-sm">
+                            <User size={22} color="#FFFFFF" strokeWidth={2.5} />
+                          </View>
+                        )}
+                        {/* Pulsating / Glowing Online Badge */}
+                        <View className="shadow-xs absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-teal-800 bg-emerald-400" />
+                      </View>
+
+                      <View className="flex-1 justify-center">
+                        <View className="flex-row items-center gap-1.5">
+                          <Text
+                            className="text-[17px] font-black tracking-tight text-white"
+                            numberOfLines={1}>
+                            {citizenName}
+                          </Text>
+                          <View className="rounded-full border border-white/20 bg-white/20 px-2 py-0.5">
+                            <Text className="text-[9px] font-extrabold uppercase tracking-wider text-white">
+                              Citizen
+                            </Text>
+                          </View>
                         </View>
-                      )}
-                      {/* Pulsating / Glowing Online Badge */}
-                      <View className="shadow-xs absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-teal-800 bg-emerald-400" />
-                    </View>
 
-                    <View className="flex-1 justify-center">
-                      <View className="flex-row items-center gap-1.5">
-                        <Text
-                          className="text-[17px] font-black tracking-tight text-white"
-                          numberOfLines={1}>
-                          {citizenName}
-                        </Text>
-                        <View className="rounded-full border border-white/20 bg-white/20 px-2 py-0.5">
-                          <Text className="text-[9px] font-extrabold uppercase tracking-wider text-white">
-                            Citizen
+                        <View className="mt-0.5 flex-row items-center gap-1.5">
+                          <View className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                          <Text className="text-[11px] font-bold tracking-wide text-teal-100">
+                            Active Now
                           </Text>
                         </View>
                       </View>
+                    </View>
 
-                      <View className="mt-0.5 flex-row items-center gap-1.5">
-                        <View className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                        <Text className="text-[11px] font-bold tracking-wide text-teal-100">
-                          Active Now
-                        </Text>
-                      </View>
+                    <View className="flex-row items-center gap-2">
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (issue.citizenPhone) {
+                            Linking.openURL(`tel:${issue.citizenPhone}`);
+                          } else {
+                            Alert.alert('Unavailable', 'Citizen phone number is not available.');
+                          }
+                        }}
+                        activeOpacity={0.7}
+                        className="h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-sm">
+                        <Phone size={18} color="#FFFFFF" strokeWidth={2.5} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert(
+                            'Issue Intelligence Details',
+                            `Title: ${issue.title}\n\nCategory: ${issue.category}\nStatus: ${issue.status.toUpperCase()}\nCitizen: ${issue.citizenName} (${issue.citizenPhone})\nLocation: ${issue.location ?? issue.address ?? 'N/A'}\n\nDescription:\n${issue.description ?? 'No description provided.'}`
+                          );
+                        }}
+                        activeOpacity={0.7}
+                        className="h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-sm">
+                        <Info size={18} color="#FFFFFF" strokeWidth={2.5} />
+                      </TouchableOpacity>
                     </View>
                   </View>
-
-                  <View className="flex-row items-center gap-2">
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (issue.citizenPhone) {
-                          Linking.openURL(`tel:${issue.citizenPhone}`);
-                        } else {
-                          Alert.alert('Unavailable', 'Citizen phone number is not available.');
-                        }
-                      }}
-                      activeOpacity={0.7}
-                      className="h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-sm">
-                      <Phone size={18} color="#FFFFFF" strokeWidth={2.5} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Alert.alert(
-                          'Issue Intelligence Details',
-                          `Title: ${issue.title}\n\nCategory: ${issue.category}\nStatus: ${issue.status.toUpperCase()}\nCitizen: ${issue.citizenName} (${issue.citizenPhone})\nLocation: ${issue.location ?? issue.address ?? 'N/A'}\n\nDescription:\n${issue.description ?? 'No description provided.'}`
-                        );
-                      }}
-                      activeOpacity={0.7}
-                      className="h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-sm">
-                      <Info size={18} color="#FFFFFF" strokeWidth={2.5} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
                 </LinearGradient>
               </View>
 

@@ -67,10 +67,10 @@ import {
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { WebView } from 'react-native-webview';
-import { Issue, IssueStatus, UpdateScope } from '../lib/types';
+import { Issue, IssueStatus, UpdateScope } from 'lib/types';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { mockCitizenMessages } from '../lib/mockData';
-import WorkExecutionFlow from 'components/WorkExecutionFlow';
+import { mockCitizenMessages } from 'lib/mockData';
+import WorkExecutionFlow from 'components/FieldOfficer/WorkExecutionFlow';
 import CitizenMessagingInterface from 'components/CitizenMessagingInterface';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
