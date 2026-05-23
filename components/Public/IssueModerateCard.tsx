@@ -62,19 +62,15 @@ export default function IssueModerationCard({
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40 }).start();
 
   const catMeta = CATEGORY_COLORS[issue.category] ?? CATEGORY_COLORS['Pothole'];
-  const isPublished = issue.publish_status === 'published';
+  const isPublished = issue?.publish_status === 'published';
   const hasBeforeImg = issue.before_images?.length > 0;
   const hasAfterImg = issue.after_images?.length > 0;
 
   const getCardGradient = () => {
     if (issue.status === 'Resolved') {
-      return isDark 
-        ? ['#064e3b', '#0f172a'] 
-        : ['#d1fae5', '#ffffff'];
+      return isDark ? ['#064e3b', '#0f172a'] : ['#d1fae5', '#ffffff'];
     } else {
-      return isDark 
-        ? ['#7f1d1d', '#0f172a'] 
-        : ['#fee2e2', '#ffffff'];
+      return isDark ? ['#7f1d1d', '#0f172a'] : ['#fee2e2', '#ffffff'];
     }
   };
 
@@ -140,9 +136,11 @@ export default function IssueModerationCard({
                   </View>
                 </View>
               )}
-              
+
               {hasBeforeImg && hasAfterImg && (
-                <View style={{ width: 2, backgroundColor: isDark ? '#0F172A' : '#FFFFFF', zIndex: 10 }} />
+                <View
+                  style={{ width: 2, backgroundColor: isDark ? '#0F172A' : '#FFFFFF', zIndex: 10 }}
+                />
               )}
 
               {hasAfterImg && (
@@ -157,7 +155,7 @@ export default function IssueModerationCard({
                     style={StyleSheet.absoluteFillObject}
                   />
                   <View className="absolute bottom-2 left-2 overflow-hidden rounded-lg">
-                    <BlurView intensity={20} tint="light" className="px-2.5 py-1 bg-emerald-900/30">
+                    <BlurView intensity={20} tint="light" className="bg-emerald-900/30 px-2.5 py-1">
                       <Text className="text-[10px] font-black tracking-widest text-emerald-100">
                         AFTER
                       </Text>
@@ -165,7 +163,7 @@ export default function IssueModerationCard({
                   </View>
                 </View>
               )}
-              
+
               {hasBeforeImg && !hasAfterImg && (
                 <View
                   style={{ flex: 1, backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }}
@@ -183,26 +181,39 @@ export default function IssueModerationCard({
             {/* Top row: category + publish status */}
             <View className="mb-3 flex-row items-start justify-between">
               <View className="flex-1 flex-row flex-wrap items-center gap-2">
-                
                 {/* Status Badge */}
                 <View
                   className="flex-row items-center gap-1.5 rounded-xl px-2.5 py-1"
                   style={{
-                    backgroundColor: issue.status === 'Resolved' 
-                      ? (isDark ? '#134e4a' : '#ccfbf1') 
-                      : (isDark ? '#450a0a' : '#fee2e2')
+                    backgroundColor:
+                      issue.status === 'Resolved'
+                        ? isDark
+                          ? '#134e4a'
+                          : '#ccfbf1'
+                        : isDark
+                          ? '#450a0a'
+                          : '#fee2e2',
                   }}>
                   {issue.status === 'Resolved' ? (
-                    <CheckCircle2 color={isDark ? '#2DD4BF' : '#0D9488'} size={11} strokeWidth={2.5} />
+                    <CheckCircle2
+                      color={isDark ? '#2DD4BF' : '#0D9488'}
+                      size={11}
+                      strokeWidth={2.5}
+                    />
                   ) : (
                     <XCircle color={isDark ? '#F87171' : '#EF4444'} size={11} strokeWidth={2.5} />
                   )}
                   <Text
                     className="text-[11px] font-extrabold tracking-wide"
-                    style={{ 
-                      color: issue.status === 'Resolved' 
-                        ? (isDark ? '#2DD4BF' : '#0D9488') 
-                        : (isDark ? '#F87171' : '#EF4444') 
+                    style={{
+                      color:
+                        issue.status === 'Resolved'
+                          ? isDark
+                            ? '#2DD4BF'
+                            : '#0D9488'
+                          : isDark
+                            ? '#F87171'
+                            : '#EF4444',
                     }}>
                     {issue.status}
                   </Text>
@@ -300,12 +311,15 @@ export default function IssueModerationCard({
                 style={{
                   borderColor: isDark ? 'rgba(51,65,85,0.5)' : 'rgba(226,232,240,0.8)',
                 }}>
-                <BlurView 
-                  intensity={isDark ? 30 : 60} 
-                  tint={isDark ? "dark" : "light"}
-                  style={[StyleSheet.absoluteFillObject, {
-                    backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : 'rgba(248,250,252,0.8)',
-                  }]}
+                <BlurView
+                  intensity={isDark ? 30 : 60}
+                  tint={isDark ? 'dark' : 'light'}
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                      backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : 'rgba(248,250,252,0.8)',
+                    },
+                  ]}
                 />
                 <View className="flex-row items-center justify-center gap-1.5 px-3 py-3">
                   <Eye color={isDark ? '#94A3B8' : '#64748B'} size={15} strokeWidth={2.5} />
@@ -334,7 +348,7 @@ export default function IssueModerationCard({
                 </View>
               </TouchableOpacity>
 
-              {isPublished ? (
+              {issue.publish_status === 'published' ? (
                 <TouchableOpacity
                   onPress={onUnpublish}
                   activeOpacity={0.75}
@@ -348,7 +362,9 @@ export default function IssueModerationCard({
                   />
                   <View className="flex-row items-center justify-center gap-1.5 px-4 py-3">
                     <EyeOff color="#EF4444" size={15} strokeWidth={2.5} />
-                    <Text className="text-[13px] font-bold text-red-600 dark:text-red-400">Unpublish</Text>
+                    <Text className="text-[13px] font-bold text-red-600 dark:text-red-400">
+                      Unpublish
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ) : (
@@ -364,7 +380,9 @@ export default function IssueModerationCard({
                   />
                   <View className="flex-row items-center justify-center gap-1.5 px-5 py-3">
                     <Sparkles color="#FFFFFF" size={14} strokeWidth={2.5} />
-                    <Text className="text-[13px] font-extrabold tracking-wide text-white">Publish</Text>
+                    <Text className="text-[13px] font-extrabold tracking-wide text-white">
+                      Publish
+                    </Text>
                   </View>
                 </TouchableOpacity>
               )}
