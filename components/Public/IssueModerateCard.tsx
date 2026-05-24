@@ -62,7 +62,7 @@ export default function IssueModerationCard({
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40 }).start();
 
   const catMeta = CATEGORY_COLORS[issue.category] ?? CATEGORY_COLORS['Pothole'];
-  const isPublished = issue?.publish_status === 'published';
+  const isPublished = issue.publish_status === 'published';
   const hasBeforeImg = issue.before_images?.length > 0;
   const hasAfterImg = issue.after_images?.length > 0;
 
@@ -291,19 +291,27 @@ export default function IssueModerationCard({
             <View
               className="mb-3 flex-row items-center gap-2 rounded-xl px-3 py-2"
               style={{ backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }}>
-              <CheckCircle2 color={isDark ? '#334155' : '#CBD5E1'} size={12} strokeWidth={2.5} />
-              <Text
-                className="flex-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500"
-                numberOfLines={1}>
-                {issue.resolved_by}
-              </Text>
+              {issue.status === 'Resolved' && (
+                <>
+                  <CheckCircle2
+                    color={isDark ? '#334155' : '#CBD5E1'}
+                    size={12}
+                    strokeWidth={2.5}
+                  />
+                  <Text
+                    className="flex-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500"
+                    numberOfLines={1}>
+                    {issue.resolved_by}
+                  </Text>
+                </>
+              )}
               <Text className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
                 {formatDate(issue.created_at)}
               </Text>
             </View>
 
             {/* Action buttons */}
-            <View className="mt-2 flex-row gap-2.5">
+            <View className="mt-2 flex-row gap-2">
               <TouchableOpacity
                 onPress={onPreview}
                 activeOpacity={0.75}
@@ -321,9 +329,11 @@ export default function IssueModerationCard({
                     },
                   ]}
                 />
-                <View className="flex-row items-center justify-center gap-1.5 px-3 py-3">
-                  <Eye color={isDark ? '#94A3B8' : '#64748B'} size={15} strokeWidth={2.5} />
-                  <Text className="text-[13px] font-bold text-slate-600 dark:text-slate-300">
+                <View className="flex-row items-center justify-center gap-1 px-2 py-3">
+                  <Eye color={isDark ? '#94A3B8' : '#64748B'} size={14} strokeWidth={2.5} />
+                  <Text
+                    className="text-[12px] font-bold text-slate-600 dark:text-slate-300"
+                    numberOfLines={1}>
                     Preview
                   </Text>
                 </View>
@@ -340,50 +350,56 @@ export default function IssueModerationCard({
                   colors={isDark ? ['#1e3a5f', '#172554'] : ['#EFF6FF', '#DBEAFE']}
                   style={StyleSheet.absoluteFillObject}
                 />
-                <View className="flex-row items-center justify-center gap-1.5 px-3 py-3">
-                  <FileEdit color="#3B82F6" size={15} strokeWidth={2.5} />
-                  <Text className="text-[13px] font-bold text-blue-700 dark:text-blue-400">
+                <View className="flex-row items-center justify-center gap-1 px-2 py-3">
+                  <FileEdit color="#3B82F6" size={14} strokeWidth={2.5} />
+                  <Text
+                    className="text-[12px] font-bold text-blue-700 dark:text-blue-400"
+                    numberOfLines={1}>
                     Moderate
                   </Text>
                 </View>
               </TouchableOpacity>
 
-              {issue.publish_status === 'published' ? (
-                <TouchableOpacity
-                  onPress={onUnpublish}
-                  activeOpacity={0.75}
-                  className="overflow-hidden rounded-xl border"
-                  style={{
-                    borderColor: isDark ? '#7f1d1d' : '#FECACA',
-                  }}>
+              {issue.publish_status === 'published' && (
+                <TouchableOpacity onPress={onUnpublish} activeOpacity={0.75} className="flex-1">
                   <LinearGradient
                     colors={isDark ? ['#450a0a', '#2c0606'] : ['#FEF2F2', '#FEE2E2']}
-                    style={StyleSheet.absoluteFillObject}
-                  />
-                  <View className="flex-row items-center justify-center gap-1.5 px-4 py-3">
-                    <EyeOff color="#EF4444" size={15} strokeWidth={2.5} />
-                    <Text className="text-[13px] font-bold text-red-600 dark:text-red-400">
-                      Unpublish
-                    </Text>
-                  </View>
+                    style={{
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: isDark ? '#7f1d1d' : '#FECACA',
+                      overflow: 'hidden',
+                    }}>
+                    <View className="flex-row items-center justify-center gap-1 px-2 py-3">
+                      <EyeOff color="#EF4444" size={14} strokeWidth={2.5} />
+                      <Text
+                        className="text-[12px] font-bold text-red-600 dark:text-red-400"
+                        numberOfLines={1}>
+                        Unpublish
+                      </Text>
+                    </View>
+                  </LinearGradient>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={onModerate}
-                  activeOpacity={0.85}
-                  className="overflow-hidden rounded-xl shadow-sm shadow-teal-600/30">
+              )}
+              {issue.publish_status === 'draft' && (
+                <TouchableOpacity onPress={onModerate} activeOpacity={0.85} className="flex-1">
                   <LinearGradient
                     colors={['#0D9488', '#0891B2']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFillObject}
-                  />
-                  <View className="flex-row items-center justify-center gap-1.5 px-5 py-3">
-                    <Sparkles color="#FFFFFF" size={14} strokeWidth={2.5} />
-                    <Text className="text-[13px] font-extrabold tracking-wide text-white">
-                      Publish
-                    </Text>
-                  </View>
+                    style={{
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                    }}>
+                    <View className="flex-row items-center justify-center gap-1 px-2 py-3">
+                      <Sparkles color="#FFFFFF" size={14} strokeWidth={2.5} />
+                      <Text
+                        className="text-[12px] font-extrabold tracking-wide text-white"
+                        numberOfLines={1}>
+                        Publish
+                      </Text>
+                    </View>
+                  </LinearGradient>
                 </TouchableOpacity>
               )}
             </View>

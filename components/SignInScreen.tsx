@@ -29,7 +29,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react-native';
-import { User } from 'lib/auth';
+import { User } from '../lib/auth';
 import '../global.css';
 
 const { width, height } = Dimensions.get('window');
@@ -131,8 +131,8 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
     setLoading(true);
 
     try {
-      const { verifyUser } = await import('lib/convexClient');
-      const { saveToken, saveUserData } = await import('lib/auth');
+      const { verifyUser } = await import('../lib/convexClient');
+      const { saveToken, saveUserData } = await import('../lib/auth');
 
       const response = await verifyUser({
         email,
@@ -354,7 +354,7 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
                   />
                   <TextInput
                     style={[styles.input, { color: textColorPrimary }]}
-                    placeholder="officer@citycare.com"
+                    placeholder="officer@citycare.in"
                     placeholderTextColor={placeholderColor}
                     value={email}
                     onChangeText={setEmail}
