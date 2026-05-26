@@ -24,7 +24,6 @@ import {
   FileText,
 } from 'lucide-react-native';
 import { PublicIssue } from 'lib/types';
-import { publicIssues as initialPublicIssues } from 'lib/mockData';
 import IssueModerationCard from 'components/Public/IssueModerateCard';
 import ModerationBottomSheet from 'components/Public/ModerationButtonSheet';
 import PublicPreviewModal from 'components/Public/PublicPreviewModal';
