@@ -165,14 +165,14 @@ const PERFORMANCE_BADGES = [
 ];
 
 const DEPARTMENT_LABELS: Record<string, string> = {
-  road: "Road & Infrastructure",
-  electricity: "Electricity & Lighting",
-  water: "Water Supply",
-  sanitation: "Sanitation & Waste",
-  drainage: "Drainage & Sewer",
-  solid_waste: "Solid Waste Management",
-  public_health: "Public Health",
-  other: "Other",
+  road: 'Road & Infrastructure',
+  electricity: 'Electricity & Lighting',
+  water: 'Water Supply',
+  sanitation: 'Sanitation & Waste',
+  drainage: 'Drainage & Sewer',
+  solid_waste: 'Solid Waste Management',
+  public_health: 'Public Health',
+  other: 'Other',
 };
 
 export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabProps) {
@@ -182,36 +182,76 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
-  
-  const fieldOfficer = useQuery(api.fieldOfficers.getFieldOfficerByUserId, { 
-    userId: profile.userId as Id<'users'> 
+
+  const fieldOfficer = useQuery(api.fieldOfficers.getFieldOfficerByUserId, {
+    userId: profile.userId as Id<'users'>,
   });
-  
+
+  const performance = useQuery(api.officerPerformance.getFieldOfficerPerformanceByUserId, {
+    userId: profile.userId as Id<'users'>,
+    range: '30d',
+  });
+
   const generateUploadUrl = useMutation(api.issuesMedia.generateUploadUrl);
   const updateProfilePicture = useMutation(api.fieldOfficers.updateFieldOfficerProfilePicture);
 
-  const officerName = fieldOfficer?.fullName || profile.name;
-  const officerEmail = fieldOfficer?.email || profile.email;
-  const officerPhone = fieldOfficer?.phone || profile.phone;
-  const rawDepartment = fieldOfficer?.department || '';
-  const departmentLabel = rawDepartment ? (DEPARTMENT_LABELS[rawDepartment] || rawDepartment) : 'N/A';
-  const city = fieldOfficer?.city || 'N/A';
-  const district = fieldOfficer?.district || 'N/A';
-  const state = fieldOfficer?.state || 'N/A';
-  const specialisations = fieldOfficer?.specialisations || [];
-  
-  const rating = fieldOfficer?.rating ?? profile.rating;
-  const efficiencyScore = fieldOfficer?.efficiencyScore ?? 92;
-  const activeIssues = fieldOfficer?.currentActiveIssues ?? 3;
-  const maxCapacity = fieldOfficer?.maxIssueCapacity ?? 15;
-  const totalResolved = fieldOfficer?.totalResolvedIssues ?? profile.total_resolved;
-  const avgResolutionHrs = fieldOfficer?.avgResolutionTime ?? 18;
-  const onTimeRate = fieldOfficer?.onTimeCompletionRate ?? 96;
+  if (!fieldOfficer || !performance) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <ActivityIndicator size="large" color="#0EA5A4" />
+      </SafeAreaView>
+    );
+  }
+
+  const officerName = performance.officer?.fullName || fieldOfficer?.fullName || profile.name;
+  const officerEmail = performance.officer?.email || fieldOfficer?.email || profile.email;
+  const officerPhone = performance.officer?.phone || fieldOfficer?.phone || profile.phone;
+  const rawDepartment = performance.officer?.department || fieldOfficer?.department || '';
+  const departmentLabel = rawDepartment ? DEPARTMENT_LABELS[rawDepartment] || rawDepartment : 'N/A';
+  const city = performance.officer?.city || fieldOfficer?.city || 'N/A';
+  const district = performance.officer?.district || fieldOfficer?.district || 'N/A';
+  const state = performance.officer?.state || fieldOfficer?.state || 'N/A';
+  const specialisations =
+    performance.officer?.specialisations || fieldOfficer?.specialisations || [];
+
+  const rating = performance.summary.rating;
+  const efficiencyScore = performance.summary.efficiencyScore;
+  const activeIssues = performance.summary.activeIssues;
+  const maxCapacity = performance.summary.maxCapacity;
+  const totalResolved = performance.summary.totalResolved;
+  const avgResolutionHrs = performance.summary.avgResolutionTime;
+  const onTimeRate = performance.summary.slaComplianceRate;
   const lastLogin = fieldOfficer?.lastLogin;
+
+  const performanceBadges = [];
+  if (onTimeRate >= 90) {
+    performanceBadges.push({
+      label: 'SLA Champion',
+      icon: <Target size={12} color="#10B981" strokeWidth={2.5} />,
+    });
+  }
+  if (avgResolutionHrs <= 24 && avgResolutionHrs > 0) {
+    performanceBadges.push({
+      label: 'Fast Response',
+      icon: <Zap size={12} color="#8B5CF6" strokeWidth={2.5} />,
+    });
+  }
+  if (efficiencyScore >= 85) {
+    performanceBadges.push({
+      label: 'Top Resolver',
+      icon: <Award size={12} color="#F59E0B" strokeWidth={2.5} />,
+    });
+  }
+  if (performanceBadges.length === 0) {
+    performanceBadges.push({
+      label: 'Active Responder',
+      icon: <Award size={12} color="#3B82F6" strokeWidth={2.5} />,
+    });
+  }
 
   const initials = officerName
     .split(' ')
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
@@ -245,33 +285,33 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
       { cancelable: true }
     );
   };
-  
+
   const handleImageCaptured = async (uri: string) => {
     try {
       setShowImagePicker(false);
       setIsUploading(true);
-      
+
       const response = await fetch(uri);
       const blob = await response.blob();
-      
+
       const postUrl = await generateUploadUrl();
       const resultUpload = await fetch(postUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: blob,
       });
-      
+
       if (!resultUpload.ok) {
         throw new Error('Failed to upload image');
       }
-      
+
       const { storageId } = await resultUpload.json();
-      
+
       await updateProfilePicture({
         userId: profile.userId as Id<'users'>,
         profilePicture: storageId,
       });
-      
+
       Alert.alert('Success', 'Profile picture updated successfully!');
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -304,14 +344,14 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
         Alert.alert('Permission Denied', 'Gallery permission is required to select photos');
         return;
       }
-      
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
-      
+
       if (!result.canceled && result.assets[0]) {
         await handleImageCaptured(result.assets[0].uri);
       }
@@ -388,12 +428,11 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
 
           {/* Avatar */}
           <View style={styles.avatarRing}>
-            <TouchableOpacity 
-              activeOpacity={0.8} 
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setShowImagePicker(true)}
               disabled={isUploading}
-              style={{ flex: 1, width: '100%', height: '100%' }}
-            >
+              style={{ flex: 1, width: '100%', height: '100%' }}>
               <LinearGradient
                 colors={
                   isDark
@@ -404,25 +443,26 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
                 {isUploading ? (
                   <ActivityIndicator color={isDark ? '#38BDF8' : '#0EA5A4'} />
                 ) : fieldOfficer?.profilePictureUrl ? (
-                  <Image 
-                    source={{ uri: fieldOfficer.profilePictureUrl }} 
-                    style={{ width: '100%', height: '100%' }} 
-                    resizeMode="cover" 
+                  <Image
+                    source={{ uri: fieldOfficer.profilePictureUrl }}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
                   />
                 ) : (
                   <Text style={styles.avatarInitials}>{initials}</Text>
                 )}
-                
+
                 {/* Camera Icon Overlay */}
                 {!isUploading && (
-                  <View style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    width: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    paddingVertical: 4,
-                    alignItems: 'center'
-                  }}>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      width: '100%',
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      paddingVertical: 4,
+                      alignItems: 'center',
+                    }}>
                     <Camera size={12} color="#FFF" />
                   </View>
                 )}
@@ -431,7 +471,7 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
           </View>
 
           {/* Name */}
-          <Text className="mb-1 mt-4 text-[26px] font-black tracking-tight text-white text-center px-4">
+          <Text className="mb-1 mt-4 px-4 text-center text-[26px] font-black tracking-tight text-white">
             {officerName}
           </Text>
 
@@ -465,7 +505,7 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
 
           {/* Performance badges */}
           <View className="flex-row flex-wrap justify-center gap-2">
-            {PERFORMANCE_BADGES.map((badge, i) => (
+            {performanceBadges.map((badge, i) => (
               <View
                 key={i}
                 className="flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
@@ -575,30 +615,41 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
             <View>
               <View className="mb-1.5 flex-row items-center justify-between">
                 <Text className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">
-                  Response Rate
+                  Response Rate (SLA Compliance)
                 </Text>
                 <Text className="text-[12px] font-extrabold text-teal-600 dark:text-teal-400">
-                  96%
+                  {onTimeRate}%
                 </Text>
               </View>
               <View className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <View
                   className="h-full rounded-full"
-                  style={[styles.progressBar, { width: '96%', backgroundColor: '#0EA5A4' }]}
+                  style={[
+                    styles.progressBar,
+                    { width: `${onTimeRate}%`, backgroundColor: '#0EA5A4' },
+                  ]}
                 />
               </View>
             </View>
             <View>
               <View className="mb-1.5 flex-row items-center justify-between">
                 <Text className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">
-                  Quality Score
+                  Quality Score (First-Time Fix)
                 </Text>
-                <Text className="text-[12px] font-extrabold text-amber-500">88%</Text>
+                <Text className="text-[12px] font-extrabold text-amber-500">
+                  {performance.summary.firstTimeFixRate}%
+                </Text>
               </View>
               <View className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <View
                   className="h-full rounded-full"
-                  style={[styles.progressBar, { width: '88%', backgroundColor: '#F59E0B' }]}
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: `${performance.summary.firstTimeFixRate}%`,
+                      backgroundColor: '#F59E0B',
+                    },
+                  ]}
                 />
               </View>
             </View>
@@ -607,12 +658,20 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
                 <Text className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">
                   Citizen Satisfaction
                 </Text>
-                <Text className="text-[12px] font-extrabold text-emerald-600">94%</Text>
+                <Text className="text-[12px] font-extrabold text-emerald-600">
+                  {Math.round(performance.charts.qualityMetrics.citizenSatisfaction)}%
+                </Text>
               </View>
               <View className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <View
                   className="h-full rounded-full"
-                  style={[styles.progressBar, { width: '94%', backgroundColor: '#10B981' }]}
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: `${Math.round(performance.charts.qualityMetrics.citizenSatisfaction)}%`,
+                      backgroundColor: '#10B981',
+                    },
+                  ]}
                 />
               </View>
             </View>
@@ -741,13 +800,13 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
               Specialisations
             </Text>
           </View>
-          
+
           <View className="flex-row flex-wrap gap-2.5">
             {specialisations.length > 0 ? (
-              specialisations.map((spec, index) => (
-                <View 
-                  key={index} 
-                  className="rounded-full bg-purple-50 px-4 py-2 border border-purple-100 dark:bg-purple-900/20 dark:border-purple-800/50">
+              specialisations.map((spec: string, index: number) => (
+                <View
+                  key={index}
+                  className="rounded-full border border-purple-100 bg-purple-50 px-4 py-2 dark:border-purple-800/50 dark:bg-purple-900/20">
                   <Text className="text-[13px] font-bold text-purple-700 dark:text-purple-300">
                     {spec}
                   </Text>
@@ -759,6 +818,106 @@ export default function FieldProfileTab({ profile, onLogout }: FieldProfileTabPr
               </Text>
             )}
           </View>
+        </View>
+
+        {/* ── Quality Metrics ── */}
+        <View className="mb-4 rounded-3xl bg-white p-5 dark:bg-slate-900" style={styles.card}>
+          <View className="mb-4 flex-row items-center gap-2.5">
+            <View className="h-8 w-8 items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-900/30">
+              <Zap size={16} color="#A855F7" strokeWidth={2.5} />
+            </View>
+            <Text className="text-[15px] font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
+              Quality Metrics
+            </Text>
+          </View>
+          <View className="gap-3.5">
+            <View className="dark:border-slate-850 flex-row items-center justify-between border-b border-slate-100 pb-3">
+              <Text className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+                First-Time Fix Rate
+              </Text>
+              <Text className="text-[14px] font-extrabold text-slate-800 dark:text-slate-200">
+                {performance.summary.firstTimeFixRate}%
+              </Text>
+            </View>
+            <View className="dark:border-slate-850 flex-row items-center justify-between border-b border-slate-100 pb-3">
+              <Text className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+                Rework Count
+              </Text>
+              <Text className="text-[14px] font-extrabold text-slate-800 dark:text-slate-200">
+                {performance.summary.reworkCount}
+              </Text>
+            </View>
+            <View className="dark:border-slate-850 flex-row items-center justify-between border-b border-slate-100 pb-3">
+              <Text className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+                Reopen Count
+              </Text>
+              <Text className="text-[14px] font-extrabold text-slate-800 dark:text-slate-200">
+                {performance.summary.reopenCount}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+                Escalated Count
+              </Text>
+              <Text className="text-[14px] font-extrabold text-slate-800 dark:text-slate-200">
+                {performance.summary.escalatedCount}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ── Recent Completed Issues ── */}
+        <View className="mb-4 rounded-3xl bg-white p-5 dark:bg-slate-900" style={styles.card}>
+          <View className="mb-4 flex-row items-center gap-2.5">
+            <View className="h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30">
+              <CheckCircle size={16} color="#10B981" strokeWidth={2.5} />
+            </View>
+            <Text className="text-[15px] font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
+              Recent Completed Issues
+            </Text>
+          </View>
+          {performance?.recentIssues && performance.recentIssues.length > 0 ? (
+            performance.recentIssues.map((issue: any) => (
+              <View
+                key={issue._id}
+                className="mb-3.5 border-b border-slate-100 pb-3 last:border-0 last:pb-0 dark:border-slate-800">
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-[14px] font-extrabold text-slate-800 dark:text-slate-200">
+                    {issue.issueCode}
+                  </Text>
+                  <View className="flex-row items-center gap-1">
+                    {issue.citizenRating !== undefined && issue.citizenRating !== null && (
+                      <>
+                        <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                        <Text className="text-[12px] font-bold text-amber-500">
+                          {issue.citizenRating}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                </View>
+                <Text
+                  className="mt-0.5 text-[13px] font-semibold text-slate-600 dark:text-slate-400"
+                  numberOfLines={1}>
+                  {issue.title}
+                </Text>
+                <View className="mt-1.5 flex-row items-center justify-between">
+                  <View className="dark:bg-slate-850 rounded bg-slate-100 px-1.5 py-0.5">
+                    <Text className="text-[10px] font-bold capitalize text-slate-500 dark:text-slate-400">
+                      {issue.status}
+                    </Text>
+                  </View>
+                  <Text className="text-[11px] text-slate-400 dark:text-slate-500">
+                    {new Date(issue.completedAt).toLocaleDateString()}
+                  </Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text className="text-[13px] font-medium italic text-slate-500 dark:text-slate-400">
+              No completed issues found
+            </Text>
+          )}
         </View>
 
         {/* ── Settings ── */}

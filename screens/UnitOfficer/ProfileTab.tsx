@@ -38,10 +38,11 @@ import {
   Image as ImageIcon,
   X,
   Trash2,
+  Zap,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 
-import { User } from '../lib/auth';
+import { User } from '../../lib/auth';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { Id } from 'convex/_generated/dataModel';
@@ -117,14 +118,14 @@ function InfoRow({ icon, label, value, last, iconBg }: InfoRowProps) {
 }
 
 const DEPARTMENT_LABELS: Record<string, string> = {
-  road: "Road & Infrastructure",
-  electricity: "Electricity & Lighting",
-  water: "Water Supply",
-  sanitation: "Sanitation & Waste",
-  drainage: "Drainage & Sewer",
-  solid_waste: "Solid Waste Management",
-  public_health: "Public Health",
-  other: "Other",
+  road: 'Road & Infrastructure',
+  electricity: 'Electricity & Lighting',
+  water: 'Water Supply',
+  sanitation: 'Sanitation & Waste',
+  drainage: 'Drainage & Sewer',
+  solid_waste: 'Solid Waste Management',
+  public_health: 'Public Health',
+  other: 'Other',
 };
 
 export default function ProfileTab({
@@ -136,7 +137,7 @@ export default function ProfileTab({
   const isDark = colorScheme === 'dark';
   const [isUploading, setIsUploading] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
-  
+
   const generateUploadUrl = useMutation(api.issuesMedia.generateUploadUrl);
   const updateProfilePicture = useMutation(api.unitOfficers.updateUnitOfficerProfilePicture);
 
@@ -146,23 +147,38 @@ export default function ProfileTab({
     user.role === 'unit_officer' ? { userId: user.id } : 'skip'
   );
 
+  const performance = useQuery(
+    api.officerPerformance.getUnitOfficerProfilePerformance,
+    // @ts-ignore
+    user.role === 'unit_officer' ? { userId: user.id as Id<'users'>, range: '30d' } : 'skip'
+  );
+
+  if (user.role === 'unit_officer' && (!unitOfficer || !performance)) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <ActivityIndicator size="large" color="#0EA5A4" />
+      </SafeAreaView>
+    );
+  }
+
   // @ts-ignore
-  const userName = unitOfficer?.fullName || user.name || 'Officer';
-  const userEmail = unitOfficer?.email || user.email;
+  const userName =
+    performance?.officer?.fullName || unitOfficer?.fullName || user.name || 'Officer';
+  const userEmail = performance?.officer?.email || unitOfficer?.email || user.email;
   const role = user.role;
 
-  const rawDepartment = unitOfficer?.department || '';
-  const department = rawDepartment ? (DEPARTMENT_LABELS[rawDepartment] || rawDepartment) : 'N/A';
-  const city = unitOfficer?.city || 'Varanasi';
-  const district = unitOfficer?.district || 'Varanasi District';
-  const state = unitOfficer?.state || 'Uttar Pradesh';
+  const rawDepartment = performance?.officer?.department || unitOfficer?.department || '';
+  const department = rawDepartment ? DEPARTMENT_LABELS[rawDepartment] || rawDepartment : 'N/A';
+  const city = performance?.officer?.city || unitOfficer?.city || 'Varanasi';
+  const district = performance?.officer?.district || unitOfficer?.district || 'Varanasi District';
+  const state = performance?.officer?.state || unitOfficer?.state || 'Uttar Pradesh';
 
-  const rating = unitOfficer?.rating || 4.8;
-  const efficiency = unitOfficer?.efficiencyScore || 94;
+  const rating = performance?.personal?.rating ?? 0;
+  const efficiency = performance?.personal?.efficiencyScore ?? 0;
 
-  const totalVerified = unitOfficer?.totalVerifiedIssues || 128;
-  const totalRejected = unitOfficer?.totalRejectedIssues || 12;
-  const totalIssues = totalVerified + totalRejected + 15; // Mocking some pending
+  const totalVerified = performance?.personal?.totalVerified ?? 0;
+  const totalRejected = performance?.personal?.totalRejected ?? 0;
+  const totalIssues = performance?.personal?.totalReviewed ?? 0;
 
   const roleBadge = getRoleBadgeStyle(role, isDark);
 
@@ -176,33 +192,33 @@ export default function ProfileTab({
       },
     ]);
   };
-  
+
   const handleImageCaptured = async (uri: string) => {
     try {
       setShowImagePicker(false);
       setIsUploading(true);
-      
+
       const response = await fetch(uri);
       const blob = await response.blob();
-      
+
       const postUrl = await generateUploadUrl();
       const resultUpload = await fetch(postUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: blob,
       });
-      
+
       if (!resultUpload.ok) {
         throw new Error('Failed to upload image');
       }
-      
+
       const { storageId } = await resultUpload.json();
-      
+
       await updateProfilePicture({
         userId: user.id as Id<'users'>,
         profilePicture: storageId,
       });
-      
+
       Alert.alert('Success', 'Profile picture updated successfully!');
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -235,14 +251,14 @@ export default function ProfileTab({
         Alert.alert('Permission Denied', 'Gallery permission is required to select photos');
         return;
       }
-      
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
-      
+
       if (!result.canceled && result.assets[0]) {
         await handleImageCaptured(result.assets[0].uri);
       }
@@ -293,37 +309,37 @@ export default function ProfileTab({
           {/* Avatar Area */}
           <View className="items-center px-5 pb-8 pt-10">
             <View style={styles.avatarRing}>
-              <TouchableOpacity 
-                activeOpacity={0.8} 
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => setShowImagePicker(true)}
                 disabled={isUploading}
-                style={{ flex: 1, width: '100%', height: '100%' }}
-              >
+                style={{ flex: 1, width: '100%', height: '100%' }}>
                 <LinearGradient
                   colors={['#22D3EE', '#06B6D4', '#0891B2']}
                   style={[styles.avatarGradient, { overflow: 'hidden' }]}>
                   {isUploading ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : unitOfficer?.profilePictureUrl ? (
-                    <Image 
-                      source={{ uri: unitOfficer.profilePictureUrl }} 
-                      style={{ width: '100%', height: '100%' }} 
-                      resizeMode="cover" 
+                    <Image
+                      source={{ uri: unitOfficer.profilePictureUrl }}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="cover"
                     />
                   ) : (
                     <Text style={styles.avatarText}>{getInitials(userName)}</Text>
                   )}
-                  
+
                   {/* Camera Icon Overlay */}
                   {!isUploading && (
-                    <View style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      width: '100%',
-                      backgroundColor: 'rgba(0,0,0,0.4)',
-                      paddingVertical: 4,
-                      alignItems: 'center'
-                    }}>
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        width: '100%',
+                        backgroundColor: 'rgba(0,0,0,0.4)',
+                        paddingVertical: 4,
+                        alignItems: 'center',
+                      }}>
                       <Camera size={12} color="#FFF" />
                     </View>
                   )}
@@ -354,7 +370,9 @@ export default function ProfileTab({
                 borderColor: roleBadge.border,
               }}>
               <BadgeCheck color={roleBadge.text} size={14} strokeWidth={2.5} />
-              <Text className="text-[11px] font-black uppercase tracking-wider" style={{ color: roleBadge.text }}>
+              <Text
+                className="text-[11px] font-black uppercase tracking-wider"
+                style={{ color: roleBadge.text }}>
                 {role.replace('_', ' ')}
               </Text>
             </View>
@@ -424,39 +442,149 @@ export default function ProfileTab({
                 icon={<MapPin color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
                 label="Assigned City"
                 value={city}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={<Briefcase color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Assigned Field Officers"
+                value={`${performance?.team?.assignedFieldOfficerCount ?? 0} Officers`}
                 last
                 iconBg={isDark ? '#164E6340' : '#CFFAFE'}
               />
             </View>
           </View>
 
-          {/* Performance Metrics Card */}
+          {/* Personal Performance Card */}
           <View className="mb-7">
             <View className="mb-3 ml-1 flex-row items-center gap-2">
               <TrendingUp color={isDark ? '#22D3EE' : '#0891B2'} size={14} />
               <Text className="text-[11px] font-black uppercase tracking-[2px] text-slate-400 dark:text-cyan-500/50">
-                Performance Analytics
+                Personal Performance
               </Text>
             </View>
             <View className="overflow-hidden rounded-[32px] border border-slate-200 bg-white px-5 shadow-sm dark:border-cyan-900/30 dark:bg-slate-900/80">
               <InfoRow
                 icon={<CheckCircle2 color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
                 label="Verified Issues"
-                value={`${totalVerified} Resolved`}
+                value={`${totalVerified} Issues`}
                 iconBg={isDark ? '#164E6340' : '#CFFAFE'}
               />
               <InfoRow
                 icon={<XCircle color={isDark ? '#F87171' : '#DC2626'} size={18} />}
                 label="Rejected Issues"
-                value={`${totalRejected} Cases`}
+                value={`${totalRejected} Issues`}
                 iconBg={isDark ? '#450A0A40' : '#FEF2F2'}
               />
               <InfoRow
                 icon={<TrendingUp color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
-                label="Success Rate"
-                value={`${efficiency}% Efficiency`}
+                label="Verification Rate"
+                value={`${performance?.personal?.verificationRate ?? 0}% Rate`}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={<CheckCircle2 color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Avg Verification Time"
+                value={`${performance?.personal?.avgVerificationTime ?? 0} Hours`}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={<Briefcase color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Avg Assignment Time"
+                value={`${performance?.personal?.avgAssignmentTime ?? 0} Hours`}
                 last
                 iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+            </View>
+          </View>
+
+          {/* Team Performance Card */}
+          <View className="mb-7">
+            <View className="mb-3 ml-1 flex-row items-center gap-2">
+              <TrendingUp color={isDark ? '#22D3EE' : '#0891B2'} size={14} />
+              <Text className="text-[11px] font-black uppercase tracking-[2px] text-slate-400 dark:text-cyan-500/50">
+                Team Performance
+              </Text>
+            </View>
+            <View className="overflow-hidden rounded-[32px] border border-slate-200 bg-white px-5 shadow-sm dark:border-cyan-900/30 dark:bg-slate-900/80">
+              <InfoRow
+                icon={<CheckCircle2 color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Team Resolved Issues"
+                value={`${performance?.team?.teamResolvedIssues ?? 0} Resolved`}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={<Briefcase color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Team Active Issues"
+                value={`${performance?.team?.teamActiveIssues ?? 0} Active`}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={<TrendingUp color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Team SLA Compliance"
+                value={`${performance?.team?.teamSlaCompliance ?? 0}% Rate`}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={<CheckCircle2 color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Team Avg Resolution Time"
+                value={`${performance?.team?.teamAvgResolutionTime ?? 0} Hours`}
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+              <InfoRow
+                icon={
+                  <Star
+                    color={isDark ? '#FCD34D' : '#F59E0B'}
+                    size={18}
+                    fill={isDark ? '#FCD34D' : '#F59E0B'}
+                  />
+                }
+                label="Team Citizen Rating"
+                value={`${performance?.team?.teamCitizenRating ?? 0} / 5`}
+                iconBg={isDark ? '#451A0340' : '#FEF3C7'}
+              />
+              <InfoRow
+                icon={<Award color={isDark ? '#22D3EE' : '#0891B2'} size={18} />}
+                label="Team Efficiency Score"
+                value={`${performance?.team?.teamEfficiencyScore ?? 0}% Score`}
+                last
+                iconBg={isDark ? '#164E6340' : '#CFFAFE'}
+              />
+            </View>
+          </View>
+
+          {/* Quality Metrics Card */}
+          <View className="mb-7">
+            <View className="mb-3 ml-1 flex-row items-center gap-2">
+              <Zap color={isDark ? '#22D3EE' : '#0891B2'} size={14} />
+              <Text className="text-[11px] font-black uppercase tracking-[2px] text-slate-400 dark:text-cyan-500/50">
+                Quality Metrics
+              </Text>
+            </View>
+            <View className="overflow-hidden rounded-[32px] border border-slate-200 bg-white px-5 shadow-sm dark:border-cyan-900/30 dark:bg-slate-900/80">
+              <InfoRow
+                icon={<XCircle color={isDark ? '#F87171' : '#DC2626'} size={18} />}
+                label="Rework Rate"
+                value={`${performance?.charts?.qualityMetrics?.reworkRate ?? 0}% Rate`}
+                iconBg={isDark ? '#450A0A40' : '#FEF2F2'}
+              />
+              <InfoRow
+                icon={<XCircle color={isDark ? '#F87171' : '#DC2626'} size={18} />}
+                label="Escalation Rate"
+                value={`${performance?.charts?.qualityMetrics?.escalationRate ?? 0}% Rate`}
+                iconBg={isDark ? '#450A0A40' : '#FEF2F2'}
+              />
+              <InfoRow
+                icon={
+                  <Star
+                    color={isDark ? '#FCD34D' : '#F59E0B'}
+                    size={18}
+                    fill={isDark ? '#FCD34D' : '#F59E0B'}
+                  />
+                }
+                label="Citizen Satisfaction"
+                value={`${performance?.charts?.qualityMetrics?.citizenSatisfaction ?? 0}% Score`}
+                last
+                iconBg={isDark ? '#451A0340' : '#FEF3C7'}
               />
             </View>
           </View>
