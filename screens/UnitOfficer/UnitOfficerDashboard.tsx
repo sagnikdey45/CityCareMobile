@@ -93,6 +93,7 @@ import { mapIssueToUI } from 'lib/issueMapper';
 import { useUser } from 'context/UserContext';
 import { Id } from 'convex/_generated/dataModel';
 import { buildDuplicateGroupsFromIssues, getDuplicateFlagsByIssueId } from 'lib/duplicateDetection';
+import TrendAnalyserPanel from 'components/UnitOfficer/TrendAnalyserPanel';
 
 interface UnitOfficerDashboardProps {
   user: User;
@@ -122,7 +123,7 @@ const STATUS_LABEL_MAP: Record<StatusKey | 'all', string> = {
   rework_required: 'Rework Required',
   reopened: 'Reopened',
   escalated: 'Escalated',
-  resolved: 'Closed',
+  closed: 'Closed',
   rejected: 'Rejected',
   resolved: 'Resolved',
   withdrawn: 'Withdrawn',
@@ -282,7 +283,7 @@ const STATUS_META: Record<StatusKey, StatusMeta> = {
     dot: '#10B981',
     border: 'border-emerald-200 dark:border-emerald-800',
   },
-  resolved: {
+  closed: {
     bg: 'bg-slate-100',
     darkBg: 'dark:bg-slate-700/50',
     text: 'text-slate-600',
@@ -1829,6 +1830,7 @@ export default function UnitOfficerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterVisible, setFilterVisible] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [trendRange, setTrendRange] = useState<7 | 30 | 90 | 'all'>(30);
 
   const unreadNotifCount = notifications?.filter((n) => !n.read).length;
 
@@ -1862,13 +1864,22 @@ export default function UnitOfficerDashboard() {
     user?.id ? { userId: user.id } : 'skip'
   );
 
+  const trendAnalytics = useQuery(
+    api.issueAnalytics.getUnitOfficerTrendAnalytics,
+    user?.id
+      ? {
+          userId: user.id as Id<'users'>,
+          days: trendRange === 'all' ? 0 : trendRange,
+        }
+      : 'skip'
+  );
+
   const duplicateGroups = useMemo(() => {
     if (!rawIssues) return [];
 
     const activeIssues = rawIssues.filter((issue) => {
       const status = issue?.status?.toLowerCase().trim();
-
-      return status !== 'assigned' && status !== 'pending_uo_verification' && status !== 'resolved' && status !== 'rejected';
+      return status === 'pending';
     });
 
     return buildDuplicateGroupsFromIssues(activeIssues);
@@ -2164,18 +2175,26 @@ export default function UnitOfficerDashboard() {
               onGroupResolved={(groupId) => console.log(groupId)}
               onReject={async (issueIds, groupId) => {
                 if (!user?.id || !user?.name) {
-                  throw new Error("Missing Unit Officer details.");
+                  throw new Error('Missing Unit Officer details.');
                 }
 
                 await duplicateRejectIssues({
-                  issueIds: issueIds as Id<"issues">[],
+                  issueIds: issueIds as Id<'issues'>[],
                   UOName: user.name,
-                  rejectedBy: user.id as Id<"users">,
-                  reason: "Duplicate issue detected",
+                  rejectedBy: user.id as Id<'users'>,
+                  reason: 'Duplicate issue detected',
                   comment:
-                    "This issue has been rejected because it appears to be a duplicate of another active issue reported by the same citizen.",
+                    'This issue has been rejected because it appears to be a duplicate of another active issue reported by the same citizen.',
                 });
               }}
+            />
+
+            {/* Trend Analyser Panel */}
+            <TrendAnalyserPanel
+              trendAnalytics={trendAnalytics}
+              loading={trendAnalytics === undefined}
+              selectedRange={trendRange}
+              onRangeChange={setTrendRange}
             />
 
             {/* Search */}
