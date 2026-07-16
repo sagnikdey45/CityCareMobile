@@ -380,40 +380,38 @@ export default function TrendAnalyserPanel({
             </View>
 
             <ScrollView className="p-5" showsVerticalScrollIndicator={false}>
-              {/* Category Trends */}
-              <View className="mb-6">
+              {/* Department Scope Summary */}
+              <View className="dark:bg-slate-850 mb-6 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800/40">
                 <Text className="mb-3 text-[12px] font-black uppercase tracking-[1.5px] text-slate-400 dark:text-slate-500">
-                  Top Complaint Categories
+                  Department Scope Summary
                 </Text>
-                {categoryTrends.slice(0, 4).map((item: any, i: number) => (
-                  <View key={i} className="mb-3.5">
-                    <View className="mb-1.5 flex-row items-center justify-between">
-                      <Text className="text-[13px] font-extrabold text-slate-700 dark:text-slate-300">
-                        {item.category}
-                      </Text>
-                      <Text className="dark:text-slate-455 text-[12px] font-black text-slate-500">
-                        {item.count} issues ({item.percentage}%)
-                      </Text>
-                    </View>
-                    <View className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                      <View
-                        style={{
-                          width: `${item.percentage}%`,
-                          height: '100%',
-                          borderRadius: 8,
-                          backgroundColor:
-                            i === 0
-                              ? '#0EA5E9'
-                              : i === 1
-                                ? '#10B981'
-                                : i === 2
-                                  ? '#F59E0B'
-                                  : '#8B5CF6',
-                        }}
-                      />
-                    </View>
-                  </View>
-                ))}
+
+                <View className="flex-row justify-between border-b border-slate-200/40 py-1.5 dark:border-slate-800/40">
+                  <Text className="text-[12px] font-extrabold text-slate-500 dark:text-slate-400">
+                    Department
+                  </Text>
+                  <Text className="text-[12px] font-black text-slate-800 dark:text-slate-100">
+                    {scope?.department || 'Civic'}
+                  </Text>
+                </View>
+
+                <View className="flex-row justify-between border-b border-slate-200/40 py-1.5 dark:border-slate-800/40">
+                  <Text className="text-[12px] font-extrabold text-slate-500 dark:text-slate-400">
+                    City
+                  </Text>
+                  <Text className="text-[12px] font-black text-slate-800 dark:text-slate-100">
+                    {scope?.city || 'Not assigned'}
+                  </Text>
+                </View>
+
+                <View className="flex-row justify-between py-1.5">
+                  <Text className="text-[12px] font-extrabold text-slate-500 dark:text-slate-400">
+                    Issues in selected range
+                  </Text>
+                  <Text className="text-[12px] font-black text-slate-800 dark:text-slate-100">
+                    {summary?.totalIssues ?? 0}
+                  </Text>
+                </View>
               </View>
 
               {/* Hotspots Panel */}
