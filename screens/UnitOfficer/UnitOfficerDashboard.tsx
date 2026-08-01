@@ -545,7 +545,7 @@ function IssueCard({ issue, onPress }: { issue: MappedIssue; onPress: () => void
         };
       default:
         return {
-          hex: '#3B82F6',
+          hex: '#64748B',
           bg: isDark ? 'rgba(59, 130, 246, 0.12)' : '#EFF6FF',
           border: isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.3)',
           glow: 'rgba(59, 130, 246, 0.6)',
