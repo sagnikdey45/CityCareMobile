@@ -428,7 +428,7 @@ export default defineSchema({
         reason: v.string(),
         comments: v.optional(v.string()),
         escalatedBy: v.id('users'),
-        prevIssueStatus: v.string(),
+        prevIssueStatus: v.optional(v.string()),
         escalatedAt: v.number(),
         resolved: v.optional(v.boolean()),
         resolvedAt: v.optional(v.number()),
