@@ -1,9 +1,9 @@
-"use node";
+'use node';
 
-import { action } from "./_generated/server";
-import { v } from "convex/values";
-import bcrypt from "bcryptjs";
-import { api } from "./_generated/api";
+import { action } from './_generated/server';
+import { v } from 'convex/values';
+import bcrypt from 'bcryptjs';
+import { api } from './_generated/api';
 
 // @ts-ignore
 export const verifyUser = action({
@@ -24,7 +24,7 @@ export const verifyUser = action({
     if (!user) {
       return {
         success: false,
-        error: "Invalid email or password",
+        error: 'Invalid email or password',
       };
     }
 
@@ -33,26 +33,36 @@ export const verifyUser = action({
     if (!isValid) {
       return {
         success: false,
-        error: "Invalid email or password",
+        error: 'Invalid email or password',
       };
     }
 
     // Role mismatch check
-    if (args.role && user.role !== args.role.toLowerCase().replace(" ", "_")) {
+    if (args.role && user.role !== args.role.toLowerCase().replace(' ', '_')) {
       return {
         success: false,
-        error: "Role mismatch. Please select the correct role.",
+        error: 'Role mismatch. Please select the correct role.',
       };
+    }
+
+    let mustChangePassword = false;
+    if (user.role === 'unit_officer' || user.role === 'field_officer') {
+      const officer = await ctx.runQuery(api.users.getOfficerProfile, {
+        userId: user._id,
+        role: user.role,
+      });
+      mustChangePassword = officer ? (officer.mustChangePassword ?? true) : true;
     }
 
     return {
       success: true,
-      token: "token-" + user._id,
+      token: 'token-' + user._id,
       user: {
         id: user._id,
         name: user.fullName,
         email: user.email,
         role: user.role,
+        mustChangePassword,
       },
     };
   },
